@@ -2,11 +2,24 @@
 # Python Modules
 import json
 from typing import List, Literal, Optional
+from urllib import parse
 
 # 3rd Party Modules
 import urllib3
 
 Protocol = Literal["http", "https"]
+
+
+drop_none_values = lambda d: {k: v for k, v in d.items() if v is not None}
+
+parse_query_params = lambda url: {
+    k: v[0] for k, v in parse.parse_qs(parse.urlparse(url).query).items()
+}
+
+parse_paging_data = lambda paging: {
+    "previous": parse_query_params(paging["previous"]),
+    "next": parse_query_params(paging["next"]),
+}
 
 
 class GraphAPI:
@@ -36,7 +49,7 @@ class GraphAPI:
         before: Optional[str] = None,
         after: Optional[str] = None,
         limit: Optional[int] = None,
-        external: Optional[bool] = None,
+        external: Optional[bool] = True,
     ):
         """Get products.
 
@@ -48,66 +61,28 @@ class GraphAPI:
             after: Lower page boundry, expressed as a product ID.
             limit: Maximum number of entities the response should contain.
             external: Whether to query external sources.
-
-        Example:
-            Call:
-                `.get_products(fields=["mpn", "assembly"], limit=1)`
-            Response:
-                ```
-                {
-                    "data": [
-                        {
-                            "id": "CCV1F7A8UIYH",
-                            "statements": {
-                                "mpn": {
-                                    "prop": {
-                                        "id": "manufacturer_part_num",
-                                        "label": "manufacturer part number"
-                                    },
-                                    "value": "LD031A100JAB2A"
-                                },
-                                "assembly": [
-                                    {
-                                        "prop": {
-                                            "id": "package",
-                                            "label": "package"
-                                        },
-                                        "value": "0603"
-                                    },
-                                    {
-                                        "prop": {
-                                            "id": "depth",
-                                            "label": "depth"
-                                        },
-                                        "value": "810 µm"
-                                    },
-                                    ...
-                                ]
-                            }
-                        }
-                    ],
-                    "paging":{
-                        "previous": null,
-                        "next":"/products?limit=1&after=CCV1F7A8UIYH"
-                    }
-                }
-                ```
         """
 
         res = self.http.request(
             "GET",
             f"{self.url}/products",
-            fields={
-                query: query,
-                fields: fields,
-                before: before,
-                after: after,
-                limit: limit,
-                external: external,
-            },
+            fields=drop_none_values(
+                {
+                    "query": query,
+                    "fields": fields and ",".join(fields),
+                    "before": before,
+                    "after": after,
+                    "limit": limit,
+                    "external": external,
+                }
+            ),
         )
 
-        return json.loads(res.data.decode("utf-8"))
+        data = json.loads(res.data.decode("utf-8"))
+
+        data["paging"] = parse_paging_data(data["paging"])
+
+        return data
 
     def get_orgs(
         self,
@@ -128,15 +103,21 @@ class GraphAPI:
         res = self.http.request(
             "GET",
             f"{self.url}/orgs",
-            fields={
-                query: query,
-                before: before,
-                after: after,
-                limit: limit,
-            },
+            fields=drop_none_values(
+                {
+                    "query": query,
+                    "before": before,
+                    "after": after,
+                    "limit": limit,
+                }
+            ),
         )
 
-        return json.loads(res.data.decode("utf-8"))
+        data = json.loads(res.data.decode("utf-8"))
+
+        data["paging"] = parse_paging_data(data["paging"])
+
+        return data
 
     def get_product(self, id: str):
         """Get product."""
