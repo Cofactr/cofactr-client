@@ -1,2 +1,3 @@
-# cofactr-client
+# Cofactr
+
 Python client library for accessing Cofactr.
