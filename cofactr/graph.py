@@ -48,6 +48,50 @@ class GraphAPI:
             after: Lower page boundry, expressed as a product ID.
             limit: Maximum number of entities the response should contain.
             external: Whether to query external sources.
+
+        Example:
+            Call:
+                `.get_products(fields=["mpn", "assembly"], limit=1)`
+            Response:
+                ```
+                {
+                    "data": [
+                        {
+                            "id": "CCV1F7A8UIYH",
+                            "statements": {
+                                "mpn": {
+                                    "prop": {
+                                        "id": "manufacturer_part_num",
+                                        "label": "manufacturer part number"
+                                    },
+                                    "value": "LD031A100JAB2A"
+                                },
+                                "assembly": [
+                                    {
+                                        "prop": {
+                                            "id": "package",
+                                            "label": "package"
+                                        },
+                                        "value": "0603"
+                                    },
+                                    {
+                                        "prop": {
+                                            "id": "depth",
+                                            "label": "depth"
+                                        },
+                                        "value": "810 µm"
+                                    },
+                                    ...
+                                ]
+                            }
+                        }
+                    ],
+                    "paging":{
+                        "previous": null,
+                        "next":"/products?limit=1&after=CCV1F7A8UIYH"
+                    }
+                }
+                ```
         """
 
         res = self.http.request(
