@@ -68,7 +68,7 @@ class GraphAPI:
             f"{self.url}/products",
             fields=drop_none_values(
                 {
-                    "query": query,
+                    "q": query,
                     "fields": fields and ",".join(fields),
                     "before": before,
                     "after": after,
@@ -105,7 +105,7 @@ class GraphAPI:
             f"{self.url}/orgs",
             fields=drop_none_values(
                 {
-                    "query": query,
+                    "q": query,
                     "before": before,
                     "after": after,
                     "limit": limit,
