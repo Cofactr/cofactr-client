@@ -38,7 +38,7 @@ class GraphAPI:
     def check_health(self):
         """Check the operational status of the service."""
 
-        res = self.http.request("GET", f"{self.url}/health")
+        res = self.http.request("GET", self.url)
 
         return json.loads(res.data.decode("utf-8"))
 
