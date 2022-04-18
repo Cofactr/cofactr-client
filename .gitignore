@@ -1,3 +1,4 @@
 # Caches
 **/__pycache__
 .mypy_cache
+dist/
