@@ -119,10 +119,31 @@ class GraphAPI:
 
         return data
 
-    def get_product(self, id: str):
-        """Get product."""
+    def get_product(
+        self,
+        id: str,
+        fields: Optional[List[str]] = None,
+        external: Optional[bool] = True,
+    ):
+        """Get product.
 
-        res = self.http.request("GET", f"{self.url}/products/{id}")
+        Args:
+            fields: Used to filter properties that the response should contain. A field can be a
+                concrete property like "mpn" or an abstract group of properties like "assembly".
+            external: Whether to query external sources in order to update information for the
+                given product.
+        """
+
+        res = self.http.request(
+            "GET",
+            f"{self.url}/products/{id}",
+            fields=drop_none_values(
+                {
+                    "fields": fields and ",".join(fields),
+                    "external": external,
+                }
+            ),
+        )
 
         return json.loads(res.data.decode("utf-8"))
 
