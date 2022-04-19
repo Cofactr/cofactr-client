@@ -1,4 +1,5 @@
 # Standard Modules
+from itertools import islice
 from typing import Callable
 from urllib import parse
 
@@ -11,6 +12,8 @@ parse_paging_data = lambda paging: {
     "previous": parse_query_params(paging["previous"]),
     "next": parse_query_params(paging["next"]),
 }
+
+first = lambda xs, i: list(islice(xs, None, i))
 
 
 class Cursor(object):
