@@ -1,2 +1,1 @@
-import cofactr.graph as graph_import
-graph = graph_import
+"""Python client library for accessing Cofactr."""

@@ -1,4 +1,4 @@
-"""Cofactr client."""
+"""Cofactr graph API client."""
 # Python Modules
 from functools import partial
 import json

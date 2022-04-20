@@ -1,3 +1,4 @@
+"""Cursor for iterating over results."""
 # Standard Modules
 from itertools import islice
 from typing import Callable
@@ -17,6 +18,8 @@ first = lambda xs, i: list(islice(xs, None, i))
 
 
 class Cursor(object):
+    """Cursor for iterating over results."""
+
     def __init__(
         self,
         request: Callable,
@@ -24,28 +27,29 @@ class Cursor(object):
         after,
         limit,
         batch_size,
-        *args,
-        **kwargs,
     ):
 
         self.request = request
         self.limit = limit
         self.batch_size = batch_size
-        self.args = args
-        self.kwargs = kwargs
 
         self.i = 0
         self.batch_i = self.i
-        self.batch = self.request_batch(before=before, after=after)
+        self._paging = None
+        self.request_batch(before=before, after=after)
 
-    def request_batch(self, before=None, after=None, *args, **kwargs):
-        return self.request(
-            *self.args,
-            **self.kwargs,
+    def request_batch(self, before=None, after=None):
+
+        self.batch = self.request(
             before=before,
             after=after,
             limit=self.batch_size,
         )
+
+        batch_paging = parse_paging_data(self.batch["paging"])
+
+        if not self._paging:
+            self._paging = {"previous": batch_paging["previous"]}
 
     def __iter__(self):
 
@@ -57,19 +61,28 @@ class Cursor(object):
             raise StopIteration
 
         if self.batch is None or self.batch_i >= len(self.batch["data"]):
-            paging = parse_paging_data(self.batch["paging"])
-
-            next_batch = paging["next"]
+            next_batch = self._paging["next"]
 
             if not next_batch:
                 raise StopIteration
 
             self.batch_i = 0
-            self.batch = self.request_batch(**paging["next"])
+
+            self.request_batch(
+                before=next_batch.get("before"),
+                after=next_batch.get("after"),
+            )
 
         x = self.batch["data"][self.batch_i]
 
         self.i += 1
         self.batch_i += 1
 
+        self._paging["next"] = {"after": x["id"], "limit": self.batch_size}
+
         return x
+
+    @property
+    def paging(self):
+
+        return self._paging
