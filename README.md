@@ -5,17 +5,25 @@ Python client library for accessing Cofactr.
 ## Example
 
 ```python
-from urllib import parse
 from cofactr.graph import GraphAPI
+from cofactr.cursor import first
 
-graph_api = GraphAPI()
+g = GraphAPI()
 
-resistors = graph_api.get_products(
-    query="resistor",
+cursor = g.get_products(
+    query="esp32",
     fields=["mpn", "assembly"],
-    limit=3,
+    batch_size=10,  # Data is fetched in batches of 10 products.
+    limit=10,  # `list(cursor)` would have at most 10 elements.
     external=False,
 )
 
-more_resistors = graph_api.get_products(**resistors["paging"]["next"])
+data = first(cursor, 2)
+
+# To send to web app.
+response = {
+    "data": data,
+    # To get the next 10 after the 2 in `data`.
+    "paging": cursor.paging,
+}
 ```

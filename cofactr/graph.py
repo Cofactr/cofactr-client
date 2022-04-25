@@ -1,25 +1,58 @@
-"""Cofactr client."""
+"""Cofactr graph API client."""
 # Python Modules
+from functools import partial
 import json
 from typing import List, Literal, Optional
-from urllib import parse
 
 # 3rd Party Modules
 import urllib3
+
+from cofactr.cursor import Cursor
 
 Protocol = Literal["http", "https"]
 
 
 drop_none_values = lambda d: {k: v for k, v in d.items() if v is not None}
 
-parse_query_params = lambda url: {
-    k: v[0] for k, v in parse.parse_qs(parse.urlparse(url).query).items()
-}
 
-parse_paging_data = lambda paging: {
-    "previous": parse_query_params(paging["previous"]),
-    "next": parse_query_params(paging["next"]),
-}
+def get_products(http, url, query, fields, before, after, limit, external):
+    res = http.request(
+        "GET",
+        f"{url}/products",
+        fields=drop_none_values(
+            {
+                "q": query,
+                "fields": fields and ",".join(fields),
+                "before": before,
+                "after": after,
+                "limit": limit,
+                "external": external,
+            }
+        ),
+    )
+
+    data = json.loads(res.data.decode("utf-8"))
+
+    return data
+
+
+def get_orgs(http, url, query, before, after, limit):
+    res = http.request(
+        "GET",
+        f"{url}/orgs",
+        fields=drop_none_values(
+            {
+                "q": query,
+                "before": before,
+                "after": after,
+                "limit": limit,
+            }
+        ),
+    )
+
+    data = json.loads(res.data.decode("utf-8"))
+
+    return data
 
 
 class GraphAPI:
@@ -49,8 +82,9 @@ class GraphAPI:
         before: Optional[str] = None,
         after: Optional[str] = None,
         limit: Optional[int] = None,
+        batch_size: int = 10,
         external: Optional[bool] = True,
-    ):
+    ) -> Cursor:
         """Get products.
 
         Args:
@@ -59,30 +93,27 @@ class GraphAPI:
                 concrete property like "mpn" or an abstract group of properties like "assembly".
             before: Upper page boundry, expressed as a product ID.
             after: Lower page boundry, expressed as a product ID.
-            limit: Maximum number of entities the response should contain.
+            limit: Restrict the results of the query to a particular number of documents.
+            batch_size: The size of each batch of results requested.
             external: Whether to query external sources.
         """
 
-        res = self.http.request(
-            "GET",
-            f"{self.url}/products",
-            fields=drop_none_values(
-                {
-                    "q": query,
-                    "fields": fields and ",".join(fields),
-                    "before": before,
-                    "after": after,
-                    "limit": limit,
-                    "external": external,
-                }
-            ),
+        request = partial(
+            get_products,
+            http=self.http,
+            url=self.url,
+            query=query,
+            fields=fields,
+            external=external,
         )
 
-        data = json.loads(res.data.decode("utf-8"))
-
-        data["paging"] = parse_paging_data(data["paging"])
-
-        return data
+        return Cursor(
+            request=request,
+            before=before,
+            after=after,
+            limit=limit,
+            batch_size=batch_size,
+        )
 
     def get_orgs(
         self,
@@ -90,6 +121,7 @@ class GraphAPI:
         before: Optional[str] = None,
         after: Optional[str] = None,
         limit: Optional[int] = None,
+        batch_size: int = 10,
     ):
         """Get organizations.
 
@@ -97,27 +129,24 @@ class GraphAPI:
             query: Search query.
             before: Upper page boundry, expressed as a product ID.
             after: Lower page boundry, expressed as a product ID.
-            limit: Maximum number of entities the response should contain.
+            limit: Restrict the results of the query to a particular number of documents.
+            batch_size: The size of each batch of results requested.
         """
 
-        res = self.http.request(
-            "GET",
-            f"{self.url}/orgs",
-            fields=drop_none_values(
-                {
-                    "q": query,
-                    "before": before,
-                    "after": after,
-                    "limit": limit,
-                }
-            ),
+        request = partial(
+            get_orgs,
+            http=self.http,
+            url=self.url,
+            query=query,
         )
 
-        data = json.loads(res.data.decode("utf-8"))
-
-        data["paging"] = parse_paging_data(data["paging"])
-
-        return data
+        return Cursor(
+            request=request,
+            before=before,
+            after=after,
+            limit=limit,
+            batch_size=batch_size,
+        )
 
     def get_product(
         self,
