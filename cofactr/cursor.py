@@ -43,7 +43,7 @@ class Cursor(object):
         self.batch = self.request(
             before=before,
             after=after,
-            limit=self.batch_size,
+            limit=min((self.limit - self.i), self.batch_size),
         )
 
         batch_paging = parse_paging_data(self.batch["paging"])
