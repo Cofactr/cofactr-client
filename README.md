@@ -12,7 +12,7 @@ g = GraphAPI()
 
 cursor = g.get_products(
     query="esp32",
-    fields=["mpn", "assembly"],
+    fields="id,aliases,labels,statements{spec,assembly},offers",
     batch_size=10,  # Data is fetched in batches of 10 products.
     limit=10,  # `list(cursor)` would have at most 10 elements.
     external=False,

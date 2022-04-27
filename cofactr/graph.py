@@ -2,7 +2,7 @@
 # Python Modules
 from functools import partial
 import json
-from typing import List, Literal, Optional
+from typing import Literal, Optional
 
 # 3rd Party Modules
 import urllib3
@@ -22,7 +22,7 @@ def get_products(http, url, query, fields, before, after, limit, external):
         fields=drop_none_values(
             {
                 "q": query,
-                "fields": fields and ",".join(fields),
+                "fields": fields,
                 "before": before,
                 "after": after,
                 "limit": limit,
@@ -78,7 +78,7 @@ class GraphAPI:
     def get_products(
         self,
         query: Optional[str] = None,
-        fields: Optional[List[str]] = None,
+        fields: Optional[str] = None,
         before: Optional[str] = None,
         after: Optional[str] = None,
         limit: Optional[int] = None,
@@ -91,6 +91,7 @@ class GraphAPI:
             query: Search query.
             fields: Used to filter properties that the response should contain. A field can be a
                 concrete property like "mpn" or an abstract group of properties like "assembly".
+                Example: "id,aliases,labels,statements{spec,assembly},offers"
             before: Upper page boundry, expressed as a product ID.
             after: Lower page boundry, expressed as a product ID.
             limit: Restrict the results of the query to a particular number of documents.
@@ -151,7 +152,7 @@ class GraphAPI:
     def get_product(
         self,
         id: str,
-        fields: Optional[List[str]] = None,
+        fields: Optional[str] = None,
         external: Optional[bool] = True,
     ):
         """Get product.
@@ -159,6 +160,7 @@ class GraphAPI:
         Args:
             fields: Used to filter properties that the response should contain. A field can be a
                 concrete property like "mpn" or an abstract group of properties like "assembly".
+                Example: "id,aliases,labels,statements{spec,assembly},offers"
             external: Whether to query external sources in order to update information for the
                 given product.
         """
@@ -168,7 +170,7 @@ class GraphAPI:
             f"{self.url}/products/{id}",
             fields=drop_none_values(
                 {
-                    "fields": fields and ",".join(fields),
+                    "fields": fields,
                     "external": external,
                 }
             ),
