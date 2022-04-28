@@ -61,7 +61,7 @@ class Cursor(object):
             raise StopIteration
 
         if self.batch is None or self.batch_i >= len(self.batch["data"]):
-            next_batch = self._paging["next"]
+            next_batch = self._paging.get("next")
 
             if not next_batch:
                 raise StopIteration
