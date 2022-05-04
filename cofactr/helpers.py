@@ -16,10 +16,10 @@ def get_path(data, keys, default=None):
         return default
 
 
-def find_preferred(data: List[Mainsnak]):
+def find_preferred(data: List[Mainsnak], default=None):
     """Find preferred value."""
     return next(
-        (x for x in data if x.get("rank") == "preferred"), data[0] if data else None
+        (x for x in data if x.get("rank") == "preferred"), data[0] if data else default
     )
 
 

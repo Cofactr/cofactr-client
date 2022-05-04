@@ -11,11 +11,17 @@ class Offer:
         self._part = part
         self._offer = offer
 
-        self.authorized = get_path(
-            find_preferred(get_path(seller, ["statements", "is_authorized_seller"])),
+        self._authorized = get_path(
+            find_preferred(
+                get_path(seller, ["statements", "is_authorized_seller"]), default={}
+            ),
             ["mainsnak", "datavalue", "value"],
         )
         self._seller = Seller(**seller)
+
+    @property
+    def authorized(self) -> bool:
+        return self._authorized
 
     @property
     def seller(self) -> Seller:
