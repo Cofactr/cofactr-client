@@ -15,7 +15,7 @@ Protocol = Literal["http", "https"]
 drop_none_values = lambda d: {k: v for k, v in d.items() if v is not None}
 
 
-def get_products(http, url, query, fields, before, after, limit, external):
+def get_products(http, url, query, fields, before, after, limit, external, render):
     res = http.request(
         "GET",
         f"{url}/products",
@@ -27,6 +27,7 @@ def get_products(http, url, query, fields, before, after, limit, external):
                 "after": after,
                 "limit": limit,
                 "external": external,
+                "render": render,
             }
         ),
     )
@@ -84,6 +85,7 @@ class GraphAPI:
         limit: Optional[int] = None,
         batch_size: int = 10,
         external: Optional[bool] = True,
+        render: Optional[bool] = True,
     ) -> Cursor:
         """Get products.
 
@@ -97,6 +99,7 @@ class GraphAPI:
             limit: Restrict the results of the query to a particular number of documents.
             batch_size: The size of each batch of results requested.
             external: Whether to query external sources.
+            render: Whether to transform values to strings.
         """
 
         request = partial(
@@ -106,6 +109,7 @@ class GraphAPI:
             query=query,
             fields=fields,
             external=external,
+            render=render,
         )
 
         return Cursor(
@@ -154,6 +158,7 @@ class GraphAPI:
         id: str,
         fields: Optional[str] = None,
         external: Optional[bool] = True,
+        render: Optional[bool] = True,
     ):
         """Get product.
 
@@ -163,6 +168,7 @@ class GraphAPI:
                 Example: "id,aliases,labels,statements{spec,assembly},offers"
             external: Whether to query external sources in order to update information for the
                 given product.
+            render: Whether to transform values to strings.
         """
 
         res = self.http.request(
@@ -172,6 +178,7 @@ class GraphAPI:
                 {
                     "fields": fields,
                     "external": external,
+                    "render": render,
                 }
             ),
         )
