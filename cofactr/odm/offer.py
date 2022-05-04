@@ -57,9 +57,11 @@ class Offer:
     def prices(self):
         return self._offer["prices"]
 
-    # @property
-    # def ship_from_country(self) -> Optional[str]:
-    #     return None  # 2 letter country code for current location of this part
+    @property
+    def ship_from_country(self) -> Optional[str]:
+        """2 letter country code for current location of this part."""
+        # Default to distributor country.
+        return None
 
     @property
     def reported_on(self):
