@@ -26,7 +26,7 @@ def test_search_part(mpn: str):
 def test_get_part(cpid: str):
     """Test Part."""
 
-    part = get_part(cpid=cpid, external=False)
+    part = get_part(id=cpid, external=False)
 
     assert part
 
@@ -54,12 +54,12 @@ def test_get_part(cpid: str):
 
 
 @pytest.mark.parametrize(
-    "cpids",
+    "ids",
     [["TRGC72NRRA4W", "CCI8TPV75AW2", "CCEEPYIYIALK", "CCV1F7A8UIYH"]],
 )
-def test_get_parts(cpids: List[str]):
+def test_get_parts(ids: List[str]):
     """Test Part."""
 
-    parts = get_parts(cpids=cpids, external=False)
+    parts = get_parts(ids=ids, external=False)
 
-    assert set(parts) == set(cpids)
+    assert set(parts) == set(ids)

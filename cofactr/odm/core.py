@@ -25,13 +25,13 @@ def search_parts(query: str, limit=10, external=True) -> List[Part]:
     return [Part(**data) for data in cursor]
 
 
-def get_part(cpid: str, external=True) -> List[Part]:
+def get_part(id: str, external=True) -> List[Part]:
     """Get a part."""
 
     graph = GraphAPI()
 
     product = graph.get_product(
-        id=cpid,
+        id=id,
         fields="id,statements{spec,image,mfr,mpn,desc,package,numberofpins},offers",
         external=external,
         render=False,
@@ -40,7 +40,7 @@ def get_part(cpid: str, external=True) -> List[Part]:
     return Part(**product["data"]) if product else None
 
 
-def get_parts(cpids: List[str], external=True) -> Dict[str, Part]:
+def get_parts(ids: List[str], external=True) -> Dict[str, Part]:
     """Get a batch of parts.
 
     Note:
@@ -50,7 +50,7 @@ def get_parts(cpids: List[str], external=True) -> Dict[str, Part]:
     with ThreadPoolExecutor() as executor:
         return dict(
             zip(
-                cpids,
-                executor.map(lambda cpid: get_part(cpid, external=external), cpids),
+                ids,
+                executor.map(lambda cpid: get_part(cpid, external=external), ids),
             )
         )
