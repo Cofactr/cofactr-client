@@ -1,5 +1,6 @@
 # Standard Modules
-from typing import Dict, Optional
+from typing import Optional
+from cofactr.helpers import find_preferred, get_path
 
 # Local Modules
 from cofactr.odm.seller import Seller
@@ -10,7 +11,11 @@ class Offer:
         self._part = part
         self._offer = offer
 
-        self._seller = Seller(seller)
+        self.authorized = get_path(
+            find_preferred(get_path(seller, ["statements", "is_authorized_seller"])),
+            ["mainsnak", "datavalue", "value"],
+        )
+        self._seller = Seller(**seller)
 
     @property
     def seller(self) -> Seller:
@@ -32,10 +37,6 @@ class Offer:
     @property
     def multiple(self) -> int:
         return self._offer["order_multiple"]
-
-    @property
-    def authorized(self) -> bool:
-        return True  # is this supplier authorized for this manufacturer
 
     @property
     def foreign(self) -> Optional[bool]:

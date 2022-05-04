@@ -47,9 +47,10 @@ def test_get_part(cpid: str):
 
     offer = part.offers[0]
 
-    print(offer.seller.name)
+    assert isinstance(offer.authorized, bool)
 
-    print(part.availability)
+    # print(offer.seller.name)
+    # print(part.availability)
 
 
 @pytest.mark.parametrize(

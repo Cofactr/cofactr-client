@@ -1,24 +1,23 @@
 # Standard Modules
 from typing import Optional, Set
 
-# Local Modules
-from cofactr.helpers import get_path
-
 
 class Seller:
-    def __init__(self, seller):
-        self._seller = seller
+    def __init__(self, labels=None, aliases=None, statements=None):
+        self._labels = labels
+        self._aliases = aliases
+        self._statements = statements
 
     @property
     def name(self) -> Optional[str]:
         """Best/canonical name of the company."""
         # Prefer label.
-        label = get_path(self._seller, ["labels", "en"], None)
+        label = self._labels.get("en")
         if label:
             return label["value"]
 
         # Fallback to an alias.
-        alias = get_path(self._seller, ["aliases", "en"], [None])[0]
+        alias = self._aliases.get("en", [None])[0]
         if alias:
             return alias["value"]
 
