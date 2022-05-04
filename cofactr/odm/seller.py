@@ -1,8 +1,11 @@
+"""Part seller class."""
 # Standard Modules
 from typing import Optional, Set
 
 
 class Seller:
+    """Part seller."""
+
     def __init__(self, labels=None, aliases=None, statements=None):
         self._labels = labels
         self._aliases = aliases

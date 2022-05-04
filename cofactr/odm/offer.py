@@ -1,3 +1,4 @@
+"""Part offer class."""
 # Standard Modules
 from typing import Optional
 from cofactr.helpers import find_preferred, get_path
@@ -7,10 +8,14 @@ from cofactr.odm.seller import Seller
 
 
 class Offer:
+    """Part offer."""
+
     def __init__(self, part, offer, seller):
         self._part = part
         self._offer = offer
 
+        # Not clear on if fields like this should be on the OfferGroup
+        # itself, rather than within the seller entity.
         self._authorized = get_path(
             find_preferred(
                 get_path(seller, ["statements", "is_authorized_seller"]), default={}
@@ -49,12 +54,12 @@ class Offer:
         return None  # was this price originally in a different currency than USD
 
     @property
-    def ship_from_country(self) -> Optional[str]:
-        return None  # 2 letter country code for current location of this part
-
-    @property
     def prices(self):
         return self._offer["prices"]
+
+    # @property
+    # def ship_from_country(self) -> Optional[str]:
+    #     return None  # 2 letter country code for current location of this part
 
     @property
     def reported_on(self):

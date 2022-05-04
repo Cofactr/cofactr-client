@@ -1,7 +1,6 @@
-"""Part object."""
+"""Part class."""
 # Standard Modules
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Set
+from typing import List, Optional
 from cofactr.helpers import find_preferred
 
 # Local Modules
