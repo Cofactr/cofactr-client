@@ -41,7 +41,12 @@ def get_part(cpid: str, external=True) -> List[Part]:
 
 
 def get_parts(cpids: List[str], external=True) -> Dict[str, Part]:
-    """Get a batch of parts."""
+    """Get a batch of parts.
+
+    Note:
+        Will evolve to use a batched requests. Where, for example, each request
+        contains 50 part IDs.
+    """
     with ThreadPoolExecutor() as executor:
         return dict(
             zip(
@@ -49,7 +54,3 @@ def get_parts(cpids: List[str], external=True) -> Dict[str, Part]:
                 executor.map(lambda cpid: get_part(cpid, external=external), cpids),
             )
         )
-
-
-# TODO: Add a bulk fetch function that accepts a list of cpids
-# and gets all the data in a single request, returning Part objects.
