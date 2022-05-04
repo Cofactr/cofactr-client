@@ -1,6 +1,7 @@
 """Core functionality."""
 # Standard Modules
-from typing import List
+from concurrent.futures import ThreadPoolExecutor
+from typing import Dict, List
 
 # Local Modules
 from cofactr.graph import GraphAPI
@@ -25,7 +26,7 @@ def search_parts(query: str, limit=10, external=True) -> List[Part]:
 
 
 def get_part(cpid: str, external=True) -> List[Part]:
-    """Search for parts."""
+    """Get a part."""
 
     graph = GraphAPI()
 
@@ -37,6 +38,17 @@ def get_part(cpid: str, external=True) -> List[Part]:
     )
 
     return Part(**product["data"]) if product else None
+
+
+def get_parts(cpids: List[str], external=True) -> Dict[str, Part]:
+    """Get a batch of parts."""
+    with ThreadPoolExecutor() as executor:
+        return dict(
+            zip(
+                cpids,
+                executor.map(lambda cpid: get_part(cpid, external=external), cpids),
+            )
+        )
 
 
 # TODO: Add a bulk fetch function that accepts a list of cpids

@@ -1,9 +1,10 @@
 """Test Part class."""
 # 3rd Party Modules
+from typing import List
 import pytest
 
 # Local Modules
-from cofactr.odm.core import get_part, search_parts
+from cofactr.odm.core import get_part, get_parts, search_parts
 
 
 @pytest.mark.parametrize(
@@ -49,3 +50,15 @@ def test_get_part(cpid: str):
     print(offer.seller.name)
 
     print(part.availability)
+
+
+@pytest.mark.parametrize(
+    "cpids",
+    [["TRGC72NRRA4W", "CCI8TPV75AW2", "CCEEPYIYIALK", "CCV1F7A8UIYH"]],
+)
+def test_get_parts(cpids: List[str]):
+    """Test Part."""
+
+    parts = get_parts(cpids=cpids, external=False)
+
+    assert set(parts) == set(cpids)
