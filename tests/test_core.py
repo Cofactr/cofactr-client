@@ -4,7 +4,7 @@ from typing import List
 import pytest
 
 # Local Modules
-from cofactr.odm.core import get_part, get_parts, search_parts
+from cofactr.core import get_part, get_parts, search_parts
 
 
 @pytest.mark.parametrize(
@@ -14,9 +14,9 @@ from cofactr.odm.core import get_part, get_parts, search_parts
 def test_search_part(mpn: str):
     """Test Part."""
 
-    parts = search_parts(query=mpn, limit=1, external=False)
+    res = search_parts(query=mpn, limit=1, external=False)
 
-    assert len(parts) == 1
+    assert len(res["data"]) > 0
 
 
 @pytest.mark.parametrize(
@@ -26,10 +26,11 @@ def test_search_part(mpn: str):
 def test_get_part(cpid: str):
     """Test Part."""
 
-    part = get_part(id=cpid, external=False)
+    res = get_part(id=cpid, external=False)
+
+    part = res["data"]
 
     assert part
-
     assert part.id == "TRGC72NRRA4W"
     assert part.mpn == "IRFH4251DTRPBF"
     assert part.hero_image == "https://assets.cofactr.com/TRGC72NRRA4W/part-img.jpg"
@@ -38,19 +39,7 @@ def test_get_part(cpid: str):
         == "Dual N-Channel 25 V 3.2 mOhm 15 nC HEXFET® Power Mosfet - PQFN 5 x 6 mm"
     )
 
-    spec = part.specs[0]
-
-    assert "property" in spec
-    assert "value" in spec
-
-    assert part.terminations == 8
-
-    offer = part.offers[0]
-
-    assert isinstance(offer.authorized, bool)
-
-    # print(offer.seller.name)
-    # print(part.availability)
+    assert {"width", "packaging"}.issubset(set(part.specs))
 
 
 @pytest.mark.parametrize(
@@ -60,6 +49,6 @@ def test_get_part(cpid: str):
 def test_get_parts(ids: List[str]):
     """Test Part."""
 
-    parts = get_parts(ids=ids, external=False)
+    responses = get_parts(ids=ids, external=False)
 
-    assert set(parts) == set(ids)
+    assert set(responses) == set(ids)
