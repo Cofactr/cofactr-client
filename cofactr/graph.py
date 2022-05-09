@@ -1,13 +1,10 @@
 """Cofactr graph API client."""
 # Python Modules
-from functools import partial
 import json
 from typing import Literal, Optional
 
 # 3rd Party Modules
 import urllib3
-
-from cofactr.cursor import Cursor
 
 Protocol = Literal["http", "https"]
 
@@ -15,7 +12,10 @@ Protocol = Literal["http", "https"]
 drop_none_values = lambda d: {k: v for k, v in d.items() if v is not None}
 
 
-def get_products(http, url, query, fields, before, after, limit, external):
+def get_products(
+    http, url, query, fields, before, after, limit, external, schema
+):  # pylint: disable=too-many-arguments
+    """Get products."""
     res = http.request(
         "GET",
         f"{url}/products",
@@ -27,16 +27,18 @@ def get_products(http, url, query, fields, before, after, limit, external):
                 "after": after,
                 "limit": limit,
                 "external": external,
+                "schema": schema,
             }
         ),
     )
 
-    data = json.loads(res.data.decode("utf-8"))
-
-    return data
+    return json.loads(res.data.decode("utf-8"))
 
 
-def get_orgs(http, url, query, before, after, limit):
+def get_orgs(
+    http, url, query, before, after, limit, schema
+):  # pylint: disable=too-many-arguments
+    """Get orgs."""
     res = http.request(
         "GET",
         f"{url}/orgs",
@@ -46,13 +48,12 @@ def get_orgs(http, url, query, before, after, limit):
                 "before": before,
                 "after": after,
                 "limit": limit,
+                "schema": schema,
             }
         ),
     )
 
-    data = json.loads(res.data.decode("utf-8"))
-
-    return data
+    return json.loads(res.data.decode("utf-8"))
 
 
 class GraphAPI:
@@ -75,16 +76,16 @@ class GraphAPI:
 
         return json.loads(res.data.decode("utf-8"))
 
-    def get_products(
+    def get_products(  # pylint: disable=too-many-arguments
         self,
         query: Optional[str] = None,
         fields: Optional[str] = None,
         before: Optional[str] = None,
         after: Optional[str] = None,
         limit: Optional[int] = None,
-        batch_size: int = 10,
         external: Optional[bool] = True,
-    ) -> Cursor:
+        schema: Optional[str] = None,
+    ):
         """Get products.
 
         Args:
@@ -95,34 +96,29 @@ class GraphAPI:
             before: Upper page boundry, expressed as a product ID.
             after: Lower page boundry, expressed as a product ID.
             limit: Restrict the results of the query to a particular number of documents.
-            batch_size: The size of each batch of results requested.
             external: Whether to query external sources.
+            schema: Response schema.
         """
 
-        request = partial(
-            get_products,
+        return get_products(
             http=self.http,
             url=self.url,
             query=query,
             fields=fields,
             external=external,
-        )
-
-        return Cursor(
-            request=request,
             before=before,
             after=after,
             limit=limit,
-            batch_size=batch_size,
+            schema=schema,
         )
 
-    def get_orgs(
+    def get_orgs(  # pylint: disable=too-many-arguments
         self,
         query: Optional[str] = None,
         before: Optional[str] = None,
         after: Optional[str] = None,
         limit: Optional[int] = None,
-        batch_size: int = 10,
+        schema: Optional[str] = None,
     ):
         """Get organizations.
 
@@ -131,22 +127,17 @@ class GraphAPI:
             before: Upper page boundry, expressed as a product ID.
             after: Lower page boundry, expressed as a product ID.
             limit: Restrict the results of the query to a particular number of documents.
-            batch_size: The size of each batch of results requested.
+            schema: Response schema.
         """
 
-        request = partial(
-            get_orgs,
+        return get_orgs(
             http=self.http,
             url=self.url,
             query=query,
-        )
-
-        return Cursor(
-            request=request,
             before=before,
             after=after,
             limit=limit,
-            batch_size=batch_size,
+            schema=schema,
         )
 
     def get_product(
@@ -154,6 +145,7 @@ class GraphAPI:
         id: str,
         fields: Optional[str] = None,
         external: Optional[bool] = True,
+        schema: Optional[str] = None,
     ):
         """Get product.
 
@@ -163,6 +155,7 @@ class GraphAPI:
                 Example: "id,aliases,labels,statements{spec,assembly},offers"
             external: Whether to query external sources in order to update information for the
                 given product.
+            schema: Response schema.
         """
 
         res = self.http.request(
@@ -172,15 +165,18 @@ class GraphAPI:
                 {
                     "fields": fields,
                     "external": external,
+                    "schema": schema,
                 }
             ),
         )
 
         return json.loads(res.data.decode("utf-8"))
 
-    def get_org(self, id: str):
+    def get_org(self, id: str, schema: Optional[str] = None):
         """Get organization."""
 
-        res = self.http.request("GET", f"{self.url}/orgs/{id}")
+        res = self.http.request(
+            "GET", f"{self.url}/orgs/{id}", fields=drop_none_values({"schema": schema})
+        )
 
         return json.loads(res.data.decode("utf-8"))
