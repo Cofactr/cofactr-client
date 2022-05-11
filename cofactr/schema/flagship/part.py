@@ -3,6 +3,9 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+# Local Modules
+from cofactr.schema.types import Document
+
 
 @dataclass
 class Part:  # pylint: disable=too-many-instance-attributes
@@ -11,7 +14,7 @@ class Part:  # pylint: disable=too-many-instance-attributes
     id: str
 
     description: Optional[str]
-    documents: List
+    documents: List[Document]
     hero_image: Optional[str]
     mpn: Optional[str]
     mfr: Optional[str]  # manufacturer name.
