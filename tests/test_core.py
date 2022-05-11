@@ -1,6 +1,6 @@
 """Test Part class."""
 # 3rd Party Modules
-from typing import List
+from typing import Any, Dict, List
 import pytest
 
 # Local Modules
@@ -20,24 +20,36 @@ def test_search_part(mpn: str):
 
 
 @pytest.mark.parametrize(
-    "cpid",
-    ["TRGC72NRRA4W"],
+    "cpid,expected",
+    [
+        (
+            "TRGC72NRRA4W",
+            {
+                "id": "TRGC72NRRA4W",
+                "mpn": "IRFH4251DTRPBF",
+                "hero_image": "https://assets.cofactr.com/TRGC72NRRA4W/part-img.jpg",
+            },
+        ),
+        (
+            "TR8LQK8DAC2G",
+            {
+                "id": "TR8LQK8DAC2G",
+                "mpn": "2N7002",
+                "hero_image": "https://assets.cofactr.com/TR8LQK8DAC2G/part-img.jpg",
+            },
+        ),
+    ],
 )
-def test_get_part(cpid: str):
+def test_get_part(cpid: str, expected: Dict[str, Any]):
     """Test Part."""
 
     res = get_part(id=cpid, external=False)
 
     part = res["data"]
-
     assert part
-    assert part.id == "TRGC72NRRA4W"
-    assert part.mpn == "IRFH4251DTRPBF"
-    assert part.hero_image == "https://assets.cofactr.com/TRGC72NRRA4W/part-img.jpg"
-    assert (
-        part.description
-        == "Dual N-Channel 25 V 3.2 mOhm 15 nC HEXFET® Power Mosfet - PQFN 5 x 6 mm"
-    )
+
+    for attr, expected_value in expected.items():
+        assert getattr(part, attr) == expected_value
 
     assert {"width", "packaging"}.issubset(set(part.specs))
 
