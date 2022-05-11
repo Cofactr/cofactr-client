@@ -1,7 +1,24 @@
 """Part class."""
 # Standard Modules
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional, TypedDict
+
+
+class Spec(TypedDict):
+    """Specification."""
+
+    type: Literal[
+        "boolean",
+        "external_id",
+        "monolingual_text",
+        "quantity",
+        "url",
+        "time",
+        "kb_item",
+    ]
+    unit: Optional[str]
+    value: Any
+    display: str
 
 
 @dataclass
@@ -15,9 +32,9 @@ class Part:  # pylint: disable=too-many-instance-attributes
     hero_image: Optional[str]
     mpn: Optional[str]
     mfr: Optional[str]  # manufacturer name.
-    msl: Optional[str]
+    msl: Optional[int]  # Num of hours until a bake is required.
     package: Optional[str]
-    specs: Dict[str, str]
+    specs: Dict[str, Spec]
     terminations: Optional[int]
 
     inventory_level: Optional[int]
@@ -25,3 +42,6 @@ class Part:  # pylint: disable=too-many-instance-attributes
     quotable: Optional[int]
     maybe: Optional[int]
     updated_at: Optional[str]
+
+    # def calc_overage(quant: int) -> int:
+    #     return quant

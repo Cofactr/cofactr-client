@@ -1,9 +1,10 @@
 """Part offer class."""
 # Standard Modules
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 # Local Modules
+from cofactr.kb.entity.types import PricePoint
 from cofactr.schema.flagship.seller import Seller
 
 
@@ -11,11 +12,14 @@ from cofactr.schema.flagship.seller import Seller
 class Offer:  # pylint: disable=too-many-instance-attributes
     """Part offer."""
 
-    buyable: Optional[int]
-    quotable: Optional[int]
-    maybe: Optional[int]
-    is_authorized: Optional[bool]
+    part: str  # Cofactr part ID.
     seller: Seller
+    is_authorized: bool  # defaults to False.
+    status: Optional[Literal["buyable", "quotable", "maybe"]]
+    shipping_lead: Optional[int]
+    # Country code for the current location of this part, defaults to
+    # that of the distributor.
+    ships_from_country: Optional[str]
     # Stock Keeping Unit used internally by distributor.
     sku: Optional[str]
     # The geo-political region(s) for which the offer is valid.
@@ -27,7 +31,7 @@ class Offer:  # pylint: disable=too-many-instance-attributes
     # Minimum Order Quantity: smallest number of parts that can be
     # purchased.
     moq: Optional[int]
-    prices: Optional[List]
+    prices: Optional[List[PricePoint]]
     # The URL to view offer on distributor website. This will
     # redirect via Octopart's server.
     click_url: Optional[str]
@@ -43,17 +47,6 @@ class Offer:  # pylint: disable=too-many-instance-attributes
     order_multiple: Optional[int]
     # The quantity of parts as packaged by the seller.
     multipack_quantity: Optional[int]
-    # 2 letter country code for current location of this part.
-    # Default to distributor country.
-    # ship_from_country: Optional[str]
-
-    # Was this price originally in a different currency than USD?
 
     def __post_init__(self):
         self.seller = Seller(**self.seller)  # pylint: disable=not-a-mapping
-
-    # def calculate_tariffs(quant, destination_country) -> float:
-    #     return  # estimated tar
-
-    # def is_exportable(destination_country) -> bool:
-    #     return
