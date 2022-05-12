@@ -74,12 +74,12 @@ def test_get_product(cpid: str, expected: Dict[str, Any]):
     "ids",
     [["TRGC72NRRA4W", "CCI8TPV75AW2", "CCEEPYIYIALK", "CCV1F7A8UIYH"]],
 )
-def test_get_parts_by_ids(ids: List[str]):
+def test_get_products_by_ids(ids: List[str]):
     """Test getting parts in bulk by their IDs."""
 
     graph = GraphAPI()
 
-    res = graph.get_parts_by_ids(
+    res = graph.get_products_by_ids(
         ids=ids,
         external=False,
         schema=ProductSchemaName.FLAGSHIP,

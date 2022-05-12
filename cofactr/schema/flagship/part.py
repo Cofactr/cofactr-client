@@ -13,7 +13,7 @@ class Part:  # pylint: disable=too-many-instance-attributes
 
     id: str
 
-    classification: List[str]
+    classification: Optional[str]
     description: Optional[str]
     documents: List[Document]
     hero_image: Optional[str]

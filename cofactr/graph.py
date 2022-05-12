@@ -95,7 +95,7 @@ class GraphAPI:
         after: Optional[str] = None,
         limit: Optional[int] = None,
         external: Optional[bool] = True,
-        schema: Optional[ProductSchemaName] = None,
+        schema: ProductSchemaName = ProductSchemaName.FLAGSHIP,
     ):
         """Get products.
 
@@ -128,14 +128,14 @@ class GraphAPI:
         res["data"] = [Product(**data) for data in res["data"]]
 
         return res
-    
-    def get_parts_by_ids(
+
+    def get_products_by_ids(
         self,
         ids: List[str],
         external: Optional[bool] = True,
         schema: ProductSchemaName = ProductSchemaName.FLAGSHIP,
     ):
-        """Get a batch of parts.
+        """Get a batch of products.
 
         Note:
             Will evolve to use a batched requests. Where, for example, each request
@@ -146,7 +146,10 @@ class GraphAPI:
                 zip(
                     ids,
                     executor.map(
-                        lambda cpid: self.get_product(id=cpid, external=external, schema=schema), ids
+                        lambda cpid: self.get_product(
+                            id=cpid, external=external, schema=schema
+                        ),
+                        ids,
                     ),
                 )
             )
@@ -157,7 +160,7 @@ class GraphAPI:
         before: Optional[str] = None,
         after: Optional[str] = None,
         limit: Optional[int] = None,
-        schema: Optional[str] = None,
+        schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
     ):
         """Get organizations.
 
@@ -190,7 +193,7 @@ class GraphAPI:
         id: str,
         fields: Optional[str] = None,
         external: Optional[bool] = True,
-        schema: Optional[str] = None,
+        schema: ProductSchemaName = ProductSchemaName.FLAGSHIP,
     ):
         """Get product.
 
@@ -228,7 +231,7 @@ class GraphAPI:
         product_id: str,
         fields: Optional[str] = None,
         external: Optional[bool] = True,
-        schema: Optional[OfferSchemaName] = None,
+        schema: OfferSchemaName = OfferSchemaName.FLAGSHIP,
     ):
         """Get product.
 
@@ -259,12 +262,18 @@ class GraphAPI:
 
         return res
 
-    def get_org(self, id: str, schema: Optional[OrgSchemaName] = None):
+    def get_org(
+        self,
+        id: str,
+        schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
+    ):
         """Get organization."""
 
         res = json.loads(
             self.http.request(
-                "GET", f"{self.url}/orgs/{id}", fields=drop_none_values({"schema": schema.value})
+                "GET",
+                f"{self.url}/orgs/{id}",
+                fields=drop_none_values({"schema": schema.value}),
             ).data.decode("utf-8")
         )
 

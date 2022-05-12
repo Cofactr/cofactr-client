@@ -6,13 +6,16 @@ Python client library for accessing Cofactr.
 
 ```python
 from typing import List
-from cofactr.core import get_part, get_parts, search_parts
+from cofactr.graph import GraphAPI
+
 # Flagship is the default schema.
 from cofactr.schema.flagship.part import Part
 
-part_res = get_part(id=cpid, external=False)
-part: Part = res["data"]
+graph = GraphAPI()
 
-parts_res = search_parts(query="esp32", external=False)
-parts: List[Part] = res["data"]
+part_res = graph.get_product(id="IM60640MOX6H")
+part: Part = part_res["data"]
+
+parts_res = graph.get_products(query="esp32")
+parts: List[Part] = parts_res["data"]
 ```
