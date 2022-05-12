@@ -1,10 +1,13 @@
 """Test Part class."""
-# 3rd Party Modules
+# Standard Modules
 from typing import Any, Dict, List
+
+# 3rd Party Modules
 import pytest
 
 # Local Modules
-from cofactr.core import get_part, get_parts, search_parts
+from cofactr.graph import GraphAPI
+from cofactr.schema import ProductSchemaName
 
 
 @pytest.mark.parametrize(
@@ -14,7 +17,14 @@ from cofactr.core import get_part, get_parts, search_parts
 def test_search_part(mpn: str):
     """Test Part."""
 
-    res = search_parts(query=mpn, limit=1, external=False)
+    graph = GraphAPI()
+
+    res = graph.get_products(
+        query=mpn,
+        limit=1,
+        external=False,
+        schema=ProductSchemaName.FLAGSHIP,
+    )
 
     assert len(res["data"]) > 0
 
@@ -43,7 +53,13 @@ def test_search_part(mpn: str):
 def test_get_part(cpid: str, expected: Dict[str, Any]):
     """Test Part."""
 
-    res = get_part(id=cpid, external=False)
+    graph = GraphAPI()
+
+    res = graph.get_product(
+        id=cpid,
+        external=False,
+        schema=ProductSchemaName.FLAGSHIP,
+    )
 
     part = res["data"]
     assert part
@@ -61,6 +77,12 @@ def test_get_part(cpid: str, expected: Dict[str, Any]):
 def test_get_parts(ids: List[str]):
     """Test Part."""
 
-    responses = get_parts(ids=ids, external=False)
+    graph = GraphAPI()
 
-    assert set(responses) == set(ids)
+    res = graph.get_parts_by_ids(
+        ids=ids,
+        external=False,
+        schema=ProductSchemaName.FLAGSHIP,
+    )
+
+    assert set(res) == set(ids)
