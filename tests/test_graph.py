@@ -1,4 +1,4 @@
-"""Test Part class."""
+"""Test GraphAPI."""
 # Standard Modules
 from typing import Any, Dict, List
 
