@@ -22,8 +22,6 @@ class Offer:  # pylint: disable=too-many-instance-attributes
     ships_from_country: Optional[str]
     # Stock Keeping Unit used internally by distributor.
     sku: Optional[str]
-    # The geo-political region(s) for which the offer is valid.
-    eligible_region: Optional[str]
     # Number of units available to be shipped (aka Stock, Quantity).
     inventory_level: Optional[int]
     # Packaging of parts (eg Tape, Reel).
@@ -32,9 +30,6 @@ class Offer:  # pylint: disable=too-many-instance-attributes
     # purchased.
     moq: Optional[int]
     prices: Optional[List[PricePoint]]
-    # The URL to view offer on distributor website. This will
-    # redirect via Octopart's server.
-    click_url: Optional[str]
     # The last time data was fetched from external sources.
     updated_at: str
     # Number of days to acquire parts from factory.
@@ -47,6 +42,8 @@ class Offer:  # pylint: disable=too-many-instance-attributes
     order_multiple: Optional[int]
     # The quantity of parts as packaged by the seller.
     multipack_quantity: Optional[int]
+    # Did a currency conversion happen?
+    is_foreign: bool
 
     def __post_init__(self):
         self.seller = Seller(**self.seller)  # pylint: disable=not-a-mapping

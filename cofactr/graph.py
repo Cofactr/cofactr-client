@@ -1,10 +1,21 @@
 """Cofactr graph API client."""
 # Python Modules
+from concurrent.futures import ThreadPoolExecutor
 import json
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 # 3rd Party Modules
 import urllib3
+
+# Local Modules
+from cofactr.schema import (
+    OfferSchemaName,
+    OrgSchemaName,
+    ProductSchemaName,
+    schema_to_offer,
+    schema_to_org,
+    schema_to_product,
+)
 
 Protocol = Literal["http", "https"]
 
@@ -84,7 +95,7 @@ class GraphAPI:
         after: Optional[str] = None,
         limit: Optional[int] = None,
         external: Optional[bool] = True,
-        schema: Optional[str] = None,
+        schema: Optional[ProductSchemaName] = None,
     ):
         """Get products.
 
@@ -100,7 +111,7 @@ class GraphAPI:
             schema: Response schema.
         """
 
-        return get_products(
+        res = get_products(
             http=self.http,
             url=self.url,
             query=query,
@@ -109,8 +120,36 @@ class GraphAPI:
             before=before,
             after=after,
             limit=limit,
-            schema=schema,
+            schema=schema.value,
         )
+
+        Product = schema_to_product[schema]  # pylint: disable=invalid-name
+
+        res["data"] = [Product(**data) for data in res["data"]]
+
+        return res
+    
+    def get_parts_by_ids(
+        self,
+        ids: List[str],
+        external: Optional[bool] = True,
+        schema: ProductSchemaName = ProductSchemaName.FLAGSHIP,
+    ):
+        """Get a batch of parts.
+
+        Note:
+            Will evolve to use a batched requests. Where, for example, each request
+            contains 50 part IDs.
+        """
+        with ThreadPoolExecutor() as executor:
+            return dict(
+                zip(
+                    ids,
+                    executor.map(
+                        lambda cpid: self.get_product(id=cpid, external=external, schema=schema), ids
+                    ),
+                )
+            )
 
     def get_orgs(  # pylint: disable=too-many-arguments
         self,
@@ -130,15 +169,21 @@ class GraphAPI:
             schema: Response schema.
         """
 
-        return get_orgs(
+        res = get_orgs(
             http=self.http,
             url=self.url,
             query=query,
             before=before,
             after=after,
             limit=limit,
-            schema=schema,
+            schema=schema.value,
         )
+
+        Org = schema_to_org[schema]  # pylint: disable=invalid-name
+
+        res["data"] = [Org(**data) for data in res["data"]]
+
+        return res
 
     def get_product(
         self,
@@ -158,25 +203,73 @@ class GraphAPI:
             schema: Response schema.
         """
 
-        res = self.http.request(
-            "GET",
-            f"{self.url}/products/{id}",
-            fields=drop_none_values(
-                {
-                    "fields": fields,
-                    "external": external,
-                    "schema": schema,
-                }
-            ),
+        res = json.loads(
+            self.http.request(
+                "GET",
+                f"{self.url}/products/{id}",
+                fields=drop_none_values(
+                    {
+                        "fields": fields,
+                        "external": external,
+                        "schema": schema.value,
+                    }
+                ),
+            ).data.decode("utf-8")
         )
 
-        return json.loads(res.data.decode("utf-8"))
+        Product = schema_to_product[schema]  # pylint: disable=invalid-name
 
-    def get_org(self, id: str, schema: Optional[str] = None):
+        res["data"] = Product(**res["data"]) if (res and res.get("data")) else None
+
+        return res
+
+    def get_offers(
+        self,
+        product_id: str,
+        fields: Optional[str] = None,
+        external: Optional[bool] = True,
+        schema: Optional[OfferSchemaName] = None,
+    ):
+        """Get product.
+
+        Args:
+            product_id: ID of the product to get offers for.
+            fields: Used to filter properties that the response should contain.
+            external: Whether to query external sources in order to update information.
+            schema: Response schema.
+        """
+
+        res = json.loads(
+            self.http.request(
+                "GET",
+                f"{self.url}/products/{product_id}/offers",
+                fields=drop_none_values(
+                    {
+                        "fields": fields,
+                        "external": external,
+                        "schema": schema.value,
+                    }
+                ),
+            ).data.decode("utf-8")
+        )
+
+        Offer = schema_to_offer[schema]  # pylint: disable=invalid-name
+
+        res["data"] = [Offer(**data) for data in res["data"]]
+
+        return res
+
+    def get_org(self, id: str, schema: Optional[OrgSchemaName] = None):
         """Get organization."""
 
-        res = self.http.request(
-            "GET", f"{self.url}/orgs/{id}", fields=drop_none_values({"schema": schema})
+        res = json.loads(
+            self.http.request(
+                "GET", f"{self.url}/orgs/{id}", fields=drop_none_values({"schema": schema.value})
+            ).data.decode("utf-8")
         )
 
-        return json.loads(res.data.decode("utf-8"))
+        Org = schema_to_org[schema]  # pylint: disable=invalid-name
+
+        res["data"] = Org(**res["data"]) if (res and res.get("data")) else None
+
+        return res
