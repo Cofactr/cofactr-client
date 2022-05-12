@@ -18,3 +18,5 @@ class Seller:  # pylint: disable=too-many-instance-attributes
     certifications: List[str]
     #  A separate flag that's independent from accuracy.
     is_buyable: bool
+    lead: Optional[int]
+    preferred_distributor_group: Optional[str]

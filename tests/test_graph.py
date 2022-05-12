@@ -15,7 +15,7 @@ from cofactr.schema import ProductSchemaName
     ["IRFH4251DTRPBF"],
 )
 def test_search_part(mpn: str):
-    """Test Part."""
+    """Test searching for parts."""
 
     graph = GraphAPI()
 
@@ -50,8 +50,8 @@ def test_search_part(mpn: str):
         ),
     ],
 )
-def test_get_part(cpid: str, expected: Dict[str, Any]):
-    """Test Part."""
+def test_get_product(cpid: str, expected: Dict[str, Any]):
+    """Test getting a product by its ID."""
 
     graph = GraphAPI()
 
@@ -74,8 +74,8 @@ def test_get_part(cpid: str, expected: Dict[str, Any]):
     "ids",
     [["TRGC72NRRA4W", "CCI8TPV75AW2", "CCEEPYIYIALK", "CCV1F7A8UIYH"]],
 )
-def test_get_parts(ids: List[str]):
-    """Test Part."""
+def test_get_parts_by_ids(ids: List[str]):
+    """Test getting parts in bulk by their IDs."""
 
     graph = GraphAPI()
 
@@ -86,3 +86,29 @@ def test_get_parts(ids: List[str]):
     )
 
     assert set(res) == set(ids)
+
+
+@pytest.mark.parametrize(
+    "cpid",
+    ["IM60640MOX6H"],
+)
+def test_get_offers(cpid: str):
+    """Test getting offers."""
+
+    graph = GraphAPI()
+
+    flagship_res = graph.get_offers(
+        product_id=cpid,
+        external=False,
+        schema=ProductSchemaName.FLAGSHIP,
+    )
+
+    assert flagship_res
+
+    logistics_res = graph.get_offers(
+        product_id=cpid,
+        external=False,
+        schema=ProductSchemaName.LOGISTICS,
+    )
+
+    assert logistics_res

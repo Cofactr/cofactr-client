@@ -13,10 +13,12 @@ class Part:  # pylint: disable=too-many-instance-attributes
 
     id: str
 
+    classification: List[str]
     description: Optional[str]
     documents: List[Document]
     hero_image: Optional[str]
     mpn: Optional[str]
+    alt_mpns: List[str]
     mfr: Optional[str]  # manufacturer name.
     msl: Optional[str]
     package: Optional[str]
