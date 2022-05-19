@@ -7,7 +7,7 @@ import pytest
 
 # Local Modules
 from cofactr.graph import GraphAPI
-from cofactr.schema import ProductSchemaName
+from cofactr.schema import OfferSchemaName, ProductSchemaName
 
 
 @pytest.mark.parametrize(
@@ -100,7 +100,7 @@ def test_get_offers(cpid: str):
     flagship_res = graph.get_offers(
         product_id=cpid,
         external=False,
-        schema=ProductSchemaName.FLAGSHIP,
+        schema=OfferSchemaName.FLAGSHIP,
     )
 
     assert flagship_res
@@ -108,7 +108,7 @@ def test_get_offers(cpid: str):
     logistics_res = graph.get_offers(
         product_id=cpid,
         external=False,
-        schema=ProductSchemaName.LOGISTICS,
+        schema=OfferSchemaName.LOGISTICS,
     )
 
     assert logistics_res
