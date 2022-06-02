@@ -38,7 +38,7 @@ class Part:  # pylint: disable=too-many-instance-attributes
     mfr: Optional[str]  # manufacturer name.
     msl: Optional[int]  # Num of hours until a bake is required.
     package: Optional[str]
-    specs: Dict[str, Spec]
+    specs: List[Dict[Literal["id", "label", "value"], str]]
     terminations: Optional[int]
 
     updated_at: Optional[str]

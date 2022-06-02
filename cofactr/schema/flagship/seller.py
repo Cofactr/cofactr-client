@@ -1,7 +1,7 @@
 """Part seller class."""
 # Standard Modules
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Dict, List, Literal, Optional
 
 
 @dataclass
@@ -19,4 +19,5 @@ class Seller:  # pylint: disable=too-many-instance-attributes
     #  A separate flag that's independent from accuracy.
     is_buyable: bool
     lead: Optional[int]
-    preferred_distributor_group: Optional[str]
+    free_ship: Dict[Literal["threshold", "shipping_lead"], Optional[int]]
+    shipping_options: List[Dict[Literal["price", "shipping_lead"], int]]
