@@ -1,7 +1,7 @@
 """Part class."""
 # Standard Modules
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 # Local Modules
 from cofactr.schema.types import Document
@@ -22,7 +22,7 @@ class Part:  # pylint: disable=too-many-instance-attributes
     mfr: Optional[str]  # manufacturer name.
     msl: Optional[str]
     package: Optional[str]
-    specs: Dict[str, str]
+    specs: List[Dict[Literal["id", "label", "value"], str]]
     terminations: Optional[int]
 
     inventory_level: Optional[int]
