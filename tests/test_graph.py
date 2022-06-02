@@ -44,7 +44,7 @@ def test_search_part(mpn: str):
             "TR8LQK8DAC2G",
             {
                 "id": "TR8LQK8DAC2G",
-                "mpn": "2N7002",
+                "mpn": "2N7002LT1G",
                 "hero_image": "https://assets.cofactr.com/TR8LQK8DAC2G/part-img.jpg",
             },
         ),
