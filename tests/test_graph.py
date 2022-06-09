@@ -7,7 +7,11 @@ import pytest
 
 # Local Modules
 from cofactr.graph import GraphAPI
-from cofactr.schema import OfferSchemaName, OrgSchemaName, ProductSchemaName
+from cofactr.schema import (
+    OfferSchemaName,
+    ProductSchemaName,
+    SupplierSchemaName,
+)
 
 
 @pytest.mark.parametrize(
@@ -120,7 +124,7 @@ def test_get_suppliers(query):
 
     graph = GraphAPI()
 
-    res = graph.get_suppliers(query=query, schema=OrgSchemaName.FLAGSHIP)
+    res = graph.get_suppliers(query=query, schema=SupplierSchemaName.FLAGSHIP)
 
     data = res["data"]
     assert data
@@ -134,7 +138,7 @@ def test_get_supplier(org_id):
 
     graph = GraphAPI()
 
-    res = graph.get_supplier(id=org_id, schema=OrgSchemaName.FLAGSHIP)
+    res = graph.get_supplier(id=org_id, schema=SupplierSchemaName.FLAGSHIP)
 
     assert res["data"].id == org_id
 
