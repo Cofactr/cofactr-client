@@ -12,9 +12,11 @@ from cofactr.schema import (
     OfferSchemaName,
     OrgSchemaName,
     ProductSchemaName,
+    SupplierSchemaName,
     schema_to_offer,
     schema_to_org,
     schema_to_product,
+    schema_to_supplier,
 )
 from cofactr.schema.types import Completion
 
@@ -355,7 +357,7 @@ class GraphAPI:
     def get_supplier(
         self,
         id: str,
-        schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
+        schema: SupplierSchemaName = SupplierSchemaName.FLAGSHIP,
     ):
         """Get supplier."""
 
@@ -367,8 +369,8 @@ class GraphAPI:
             ).data.decode("utf-8")
         )
 
-        Org = schema_to_org[schema]  # pylint: disable=invalid-name
+        Supplier = schema_to_supplier[schema]  # pylint: disable=invalid-name
 
-        res["data"] = Org(**res["data"]) if (res and res.get("data")) else None
+        res["data"] = Supplier(**res["data"]) if (res and res.get("data")) else None
 
         return res
