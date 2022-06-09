@@ -30,9 +30,10 @@ def test_search_part(mpn: str):
 
 
 @pytest.mark.parametrize(
-    "cpid,expected",
+    "schema,cpid,expected",
     [
         (
+            "flagship",
             "TRGC72NRRA4W",
             {
                 "id": "TRGC72NRRA4W",
@@ -41,6 +42,7 @@ def test_search_part(mpn: str):
             },
         ),
         (
+            "flagship-v2",
             "TR8LQK8DAC2G",
             {
                 "id": "TR8LQK8DAC2G",
@@ -50,7 +52,7 @@ def test_search_part(mpn: str):
         ),
     ],
 )
-def test_get_product(cpid: str, expected: Dict[str, Any]):
+def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, Any]):
     """Test getting a product by its ID."""
 
     graph = GraphAPI()
@@ -58,7 +60,7 @@ def test_get_product(cpid: str, expected: Dict[str, Any]):
     res = graph.get_product(
         id=cpid,
         external=False,
-        schema=ProductSchemaName.FLAGSHIP,
+        schema=ProductSchemaName(schema),
     )
 
     part = res["data"]
@@ -67,7 +69,7 @@ def test_get_product(cpid: str, expected: Dict[str, Any]):
     for attr, expected_value in expected.items():
         assert getattr(part, attr) == expected_value
 
-    assert {"width", "packaging"}.issubset(set([s["id"] for s in part.specs]))
+    assert {"width", "packaging"}.issubset({s["id"] for s in part.specs})
 
 
 @pytest.mark.parametrize(
