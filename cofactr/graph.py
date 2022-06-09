@@ -2,7 +2,7 @@
 # Python Modules
 from concurrent.futures import ThreadPoolExecutor
 import json
-from typing import List, Literal, Optional
+from typing import Dict, List, Literal, Optional
 
 # 3rd Party Modules
 import urllib3
@@ -16,6 +16,7 @@ from cofactr.schema import (
     schema_to_org,
     schema_to_product,
 )
+from cofactr.schema.types import Completion
 
 Protocol = Literal["http", "https"]
 
@@ -188,6 +189,74 @@ class GraphAPI:
 
         return res
 
+    def get_suppliers(  # pylint: disable=too-many-arguments
+        self,
+        query: Optional[str] = None,
+        before: Optional[str] = None,
+        after: Optional[str] = None,
+        limit: Optional[int] = None,
+        schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
+    ):
+        """Get suppliers.
+
+        Args:
+            query: Search query.
+            before: Upper page boundry, expressed as a product ID.
+            after: Lower page boundry, expressed as a product ID.
+            limit: Restrict the results of the query to a particular number of documents.
+            schema: Response schema.
+        """
+
+        res = get_orgs(
+            http=self.http,
+            url=self.url,
+            query=query,
+            before=before,
+            after=after,
+            limit=limit,
+            schema=schema.value,
+        )
+
+        Org = schema_to_org[schema]  # pylint: disable=invalid-name
+
+        res["data"] = [Org(**data) for data in res["data"]]
+
+        return res
+
+    def autocomplete_orgs(  # pylint: disable=too-many-arguments
+        self,
+        query: Optional[str] = None,
+        limit: Optional[int] = None,
+        types: Optional[str] = None,
+    ) -> Dict[Literal["data"], Completion]:
+        """Autocomplete organizations.
+
+        Args:
+            query: Search query.
+            before: Upper page boundry, expressed as a product ID.
+            after: Lower page boundry, expressed as a product ID.
+            limit: Restrict the results of the query to a particular number of
+                documents.
+            types: Filter for types of organizations.
+                Example: "supplier" filters to suppliers.
+                Example: "supplier|manufacturer" filters to orgs that are a
+                    supplier or a manufacturer.
+        """
+
+        res = self.http.request(
+            "GET",
+            f"{self.url}/orgs/autocomplete",
+            fields=drop_none_values(
+                {
+                    "q": query,
+                    "limit": limit,
+                    "types": types,
+                }
+            ),
+        )
+
+        return json.loads(res.data.decode("utf-8"))
+
     def get_product(
         self,
         id: str,
@@ -268,6 +337,27 @@ class GraphAPI:
         schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
     ):
         """Get organization."""
+
+        res = json.loads(
+            self.http.request(
+                "GET",
+                f"{self.url}/orgs/{id}",
+                fields=drop_none_values({"schema": schema.value}),
+            ).data.decode("utf-8")
+        )
+
+        Org = schema_to_org[schema]  # pylint: disable=invalid-name
+
+        res["data"] = Org(**res["data"]) if (res and res.get("data")) else None
+
+        return res
+
+    def get_supplier(
+        self,
+        id: str,
+        schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
+    ):
+        """Get supplier."""
 
         res = json.loads(
             self.http.request(

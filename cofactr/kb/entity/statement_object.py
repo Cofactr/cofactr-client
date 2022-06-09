@@ -3,7 +3,7 @@
 from typing import Dict, List, Optional
 
 # Local Modules
-from app.kb.entity.types import (
+from cofactr.kb.entity.types import (
     Property,
     Rank,
     Reference,

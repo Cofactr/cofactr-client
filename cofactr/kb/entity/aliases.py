@@ -3,7 +3,7 @@
 from typing import Dict, List
 
 # Local Modules
-from app.kb.entity.types import Alias, Aliases
+from cofactr.kb.entity.types import Alias, Aliases
 
 
 def aliases(

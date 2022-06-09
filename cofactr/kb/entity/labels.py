@@ -3,7 +3,7 @@
 from typing import List
 
 # Local Modules
-from app.kb.entity.types import Alias, Labels
+from cofactr.kb.entity.types import Alias, Labels
 
 
 def labels(aliases: List[Alias]) -> Labels:
