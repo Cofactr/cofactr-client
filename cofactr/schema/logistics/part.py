@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Literal, Optional, TypedDict
 
 # Local Modules
-from cofactr.schema.types import Document
+from cofactr.schema.types import Document, TerminationType
 
 
 class Spec(TypedDict):
@@ -40,6 +40,7 @@ class Part:  # pylint: disable=too-many-instance-attributes
     package: Optional[str]
     specs: List[Dict[Literal["id", "label", "value"], str]]
     terminations: Optional[int]
+    termination_type: TerminationType
 
     updated_at: Optional[str]
 

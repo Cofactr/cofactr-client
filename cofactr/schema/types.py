@@ -1,6 +1,6 @@
 """Types for use in schema definitions."""
 # Standard Modules
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 
 class Document(TypedDict):
@@ -16,3 +16,14 @@ class Completion(TypedDict):
 
     id: str
     label: str
+
+
+TerminationType = Literal[
+    "other",
+    "SMT",
+    "THT",
+    "pressed fit",
+    "hybrid of SMT and THT",
+    "hybrid of pressed fit and SMT",
+    "hybrid of pressed fit and THT",
+]
