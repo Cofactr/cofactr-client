@@ -7,7 +7,11 @@ import pytest
 
 # Local Modules
 from cofactr.graph import GraphAPI
-from cofactr.schema import OfferSchemaName, ProductSchemaName
+from cofactr.schema import (
+    OfferSchemaName,
+    ProductSchemaName,
+    SupplierSchemaName,
+)
 
 
 @pytest.mark.parametrize(
@@ -114,3 +118,52 @@ def test_get_offers(cpid: str):
     )
 
     assert logistics_res
+
+
+@pytest.mark.parametrize("query", ["Digi-Key"])
+def test_get_suppliers(query):
+    """Test getting suppliers."""
+
+    graph = GraphAPI()
+
+    res = graph.get_suppliers(query=query, schema=SupplierSchemaName.FLAGSHIP)
+
+    data = res["data"]
+    assert data
+
+    assert query in {supplier.label for supplier in data}
+
+
+@pytest.mark.parametrize("org_id", ["622fb450e4c292d8287b0af5"])
+def test_get_supplier(org_id):
+    """Test getting a supplier."""
+
+    graph = GraphAPI()
+
+    res = graph.get_supplier(id=org_id, schema=SupplierSchemaName.FLAGSHIP)
+
+    assert res["data"].id == org_id
+
+
+@pytest.mark.parametrize(
+    "query,expected_completions",
+    [
+        (
+            "digi",
+            [
+                {"id": "622fb450e4c292d8287b0af5", "label": "Digi-Key"},
+                {"id": "622fb450e4c292d8287b0be9", "label": "Digi-Key Marketplace"},
+            ],
+        )
+    ],
+)
+def test_autocomplete_orgs(query, expected_completions):
+    """Test autocompleting orgs."""
+
+    graph = GraphAPI()
+
+    res = graph.autocomplete_orgs(query=query, types="supplier")
+
+    completions = res["data"]
+
+    assert completions == expected_completions

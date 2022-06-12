@@ -58,3 +58,18 @@ schema_to_org: Dict[OrgSchemaName, Callable] = {
     OrgSchemaName.FLAGSHIP: FlagshipSeller,
     OrgSchemaName.LOGISTICS: FlagshipSeller,
 }
+
+
+class SupplierSchemaName(str, Enum):
+    """Supplier schema name."""
+
+    INTERNAL = "internal"
+    FLAGSHIP = "flagship"
+    LOGISTICS = "logistics"
+
+
+schema_to_supplier: Dict[SupplierSchemaName, Callable] = {
+    SupplierSchemaName.INTERNAL: identity,
+    SupplierSchemaName.FLAGSHIP: FlagshipSeller,
+    SupplierSchemaName.LOGISTICS: FlagshipSeller,
+}

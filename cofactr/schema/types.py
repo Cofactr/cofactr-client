@@ -9,3 +9,10 @@ class Document(TypedDict):
     label: str
     url: str
     filename: str
+
+
+class Completion(TypedDict):
+    """Autocomplete prediction."""
+
+    id: str
+    label: str
