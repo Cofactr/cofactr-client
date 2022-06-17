@@ -38,20 +38,20 @@ def test_search_part(mpn: str):
     [
         (
             "flagship",
-            "TRGC72NRRA4W",
+            "TRRQ3ESYFO28",
             {
-                "id": "TRGC72NRRA4W",
-                "mpn": "IRFH4251DTRPBF",
-                "hero_image": "https://assets.cofactr.com/TRGC72NRRA4W/part-img.jpg",
+                "id": "TRRQ3ESYFO28",
+                "mpn": "IRFH5006TRPBF",
+                "hero_image": "https://assets.cofactr.com/TRRQ3ESYFO28/part-img.jpg",
             },
         ),
         (
             "flagship-v2",
-            "TR8LQK8DAC2G",
+            "TRRQ3ESYFO28",
             {
-                "id": "TR8LQK8DAC2G",
-                "mpn": "2N7002LT1G",
-                "hero_image": "https://assets.cofactr.com/TR8LQK8DAC2G/part-img.jpg",
+                "id": "TRRQ3ESYFO28",
+                "mpn": "IRFH5006TRPBF",
+                "hero_image": "https://assets.cofactr.com/TRRQ3ESYFO28/part-img.jpg",
             },
         ),
     ],

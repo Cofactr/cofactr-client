@@ -77,11 +77,21 @@ class GraphAPI:
     HOST = "graph.cofactr.com"
 
     def __init__(
-        self, protocol: Optional[Protocol] = PROTOCOL, host: Optional[str] = HOST
+        self,
+        protocol: Optional[Protocol] = PROTOCOL,
+        host: Optional[str] = HOST,
+        default_product_schema: ProductSchemaName = ProductSchemaName.FLAGSHIP,
+        default_org_schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
+        default_offer_schema: OfferSchemaName = OfferSchemaName.FLAGSHIP,
+        default_supplier_schema: SupplierSchemaName = SupplierSchemaName.FLAGSHIP,
     ):
 
         self.url = f"{protocol}://{host}"
         self.http = urllib3.PoolManager()
+        self.default_product_schema = default_product_schema
+        self.default_org_schema = default_org_schema
+        self.default_offer_schema = default_offer_schema
+        self.default_supplier_schema = default_supplier_schema
 
     def check_health(self):
         """Check the operational status of the service."""
@@ -98,7 +108,7 @@ class GraphAPI:
         after: Optional[str] = None,
         limit: Optional[int] = None,
         external: Optional[bool] = True,
-        schema: ProductSchemaName = ProductSchemaName.FLAGSHIP,
+        schema: Optional[ProductSchemaName] = None,
     ):
         """Get products.
 
@@ -113,6 +123,8 @@ class GraphAPI:
             external: Whether to query external sources.
             schema: Response schema.
         """
+        if not schema:
+            schema = self.default_product_schema
 
         res = get_products(
             http=self.http,
@@ -136,7 +148,7 @@ class GraphAPI:
         self,
         ids: List[str],
         external: Optional[bool] = True,
-        schema: ProductSchemaName = ProductSchemaName.FLAGSHIP,
+        schema: Optional[ProductSchemaName] = None,
     ):
         """Get a batch of products.
 
@@ -144,6 +156,9 @@ class GraphAPI:
             Will evolve to use a batched requests. Where, for example, each request
             contains 50 part IDs.
         """
+        if not schema:
+            schema = self.default_product_schema
+
         with ThreadPoolExecutor() as executor:
             return dict(
                 zip(
@@ -163,7 +178,7 @@ class GraphAPI:
         before: Optional[str] = None,
         after: Optional[str] = None,
         limit: Optional[int] = None,
-        schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
+        schema: Optional[OrgSchemaName] = None,
     ):
         """Get organizations.
 
@@ -174,6 +189,8 @@ class GraphAPI:
             limit: Restrict the results of the query to a particular number of documents.
             schema: Response schema.
         """
+        if not schema:
+            schema = self.default_org_schema
 
         res = get_orgs(
             http=self.http,
@@ -197,7 +214,7 @@ class GraphAPI:
         before: Optional[str] = None,
         after: Optional[str] = None,
         limit: Optional[int] = None,
-        schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
+        schema: Optional[OrgSchemaName] = None,
     ):
         """Get suppliers.
 
@@ -208,6 +225,8 @@ class GraphAPI:
             limit: Restrict the results of the query to a particular number of documents.
             schema: Response schema.
         """
+        if not schema:
+            schema = self.default_org_schema
 
         res = get_orgs(
             http=self.http,
@@ -264,7 +283,7 @@ class GraphAPI:
         id: str,
         fields: Optional[str] = None,
         external: Optional[bool] = True,
-        schema: ProductSchemaName = ProductSchemaName.FLAGSHIP,
+        schema: Optional[ProductSchemaName] = None,
     ):
         """Get product.
 
@@ -276,6 +295,8 @@ class GraphAPI:
                 given product.
             schema: Response schema.
         """
+        if not schema:
+            schema = self.default_product_schema
 
         res = json.loads(
             self.http.request(
@@ -302,7 +323,7 @@ class GraphAPI:
         product_id: str,
         fields: Optional[str] = None,
         external: Optional[bool] = True,
-        schema: OfferSchemaName = OfferSchemaName.FLAGSHIP,
+        schema: Optional[OfferSchemaName] = None,
     ):
         """Get product.
 
@@ -312,6 +333,8 @@ class GraphAPI:
             external: Whether to query external sources in order to update information.
             schema: Response schema.
         """
+        if not schema:
+            schema = self.default_offer_schema
 
         res = json.loads(
             self.http.request(
@@ -336,9 +359,11 @@ class GraphAPI:
     def get_org(
         self,
         id: str,
-        schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
+        schema: Optional[OrgSchemaName] = None,
     ):
         """Get organization."""
+        if not schema:
+            schema = self.default_org_schema
 
         res = json.loads(
             self.http.request(
@@ -357,9 +382,11 @@ class GraphAPI:
     def get_supplier(
         self,
         id: str,
-        schema: SupplierSchemaName = SupplierSchemaName.FLAGSHIP,
+        schema: Optional[SupplierSchemaName] = None,
     ):
         """Get supplier."""
+        if not schema:
+            schema = self.default_supplier_schema
 
         res = json.loads(
             self.http.request(
