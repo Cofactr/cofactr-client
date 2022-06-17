@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cofactr"
-version = "5.2.0"
+version = "5.2.1"
 description = "Client library for accessing Cofactr data."
 authors = ["Noah Trueblood <noah@cofactr.com>", "Riley Harrington <riley@cofactr.com>"]
 license = "MIT"
