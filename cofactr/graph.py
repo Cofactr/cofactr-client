@@ -1,4 +1,5 @@
 """Cofactr graph API client."""
+# pylint: disable=too-many-arguments
 # Python Modules
 from concurrent.futures import ThreadPoolExecutor
 import json
@@ -37,8 +38,9 @@ def get_products(
     after,
     limit,
     external,
+    force_refresh,
     schema,
-):  # pylint: disable=too-many-arguments
+):
     """Get products."""
     res = http.request(
         "GET",
@@ -57,6 +59,7 @@ def get_products(
                 "after": after,
                 "limit": limit,
                 "external": external,
+                "force_refresh": force_refresh,
                 "schema": schema,
             }
         ),
@@ -75,7 +78,7 @@ def get_orgs(
     after,
     limit,
     schema,
-):  # pylint: disable=too-many-arguments
+):
     """Get orgs."""
     res = http.request(
         "GET",
@@ -106,7 +109,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
     PROTOCOL: Protocol = "https"
     HOST = "graph.cofactr.com"
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         protocol: Optional[Protocol] = PROTOCOL,
         host: Optional[str] = HOST,
@@ -134,7 +137,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return json.loads(res.data.decode("utf-8"))
 
-    def get_products(  # pylint: disable=too-many-arguments
+    def get_products(
         self,
         query: Optional[str] = None,
         fields: Optional[str] = None,
@@ -142,6 +145,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         after: Optional[str] = None,
         limit: Optional[int] = None,
         external: Optional[bool] = True,
+        force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
     ):
         """Get products.
@@ -155,6 +159,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             after: Lower page boundry, expressed as a product ID.
             limit: Restrict the results of the query to a particular number of documents.
             external: Whether to query external sources.
+            force_refresh: Whether to force re-ingestion from external sources. Overrides
+                `external`.
             schema: Response schema.
         """
         if not schema:
@@ -168,6 +174,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             query=query,
             fields=fields,
             external=external,
+            force_refresh=force_refresh,
             before=before,
             after=after,
             limit=limit,
@@ -184,6 +191,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         self,
         ids: List[str],
         external: Optional[bool] = True,
+        force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
     ):
         """Get a batch of products.
@@ -203,6 +211,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                         lambda cpid: self.get_product(
                             id=cpid,
                             external=external,
+                            force_refresh=force_refresh,
                             schema=schema,
                         ),
                         ids,
@@ -210,7 +219,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 )
             )
 
-    def get_orgs(  # pylint: disable=too-many-arguments
+    def get_orgs(
         self,
         query: Optional[str] = None,
         before: Optional[str] = None,
@@ -248,7 +257,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return res
 
-    def get_suppliers(  # pylint: disable=too-many-arguments
+    def get_suppliers(
         self,
         query: Optional[str] = None,
         before: Optional[str] = None,
@@ -286,7 +295,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return res
 
-    def autocomplete_orgs(  # pylint: disable=too-many-arguments
+    def autocomplete_orgs(
         self,
         query: Optional[str] = None,
         limit: Optional[int] = None,
@@ -331,6 +340,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         id: str,
         fields: Optional[str] = None,
         external: Optional[bool] = True,
+        force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
     ):
         """Get product.
@@ -341,6 +351,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 Example: "id,aliases,labels,statements{spec,assembly},offers"
             external: Whether to query external sources in order to update information for the
                 given product.
+            force_refresh: Whether to force re-ingestion from external sources. Overrides
+                `external`.
             schema: Response schema.
         """
         if not schema:
@@ -360,6 +372,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     {
                         "fields": fields,
                         "external": external,
+                        "force_refresh": force_refresh,
                         "schema": schema.value,
                     }
                 ),
@@ -377,6 +390,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         product_id: str,
         fields: Optional[str] = None,
         external: Optional[bool] = True,
+        force_refresh: bool = False,
         schema: Optional[OfferSchemaName] = None,
     ):
         """Get product.
@@ -385,6 +399,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             product_id: ID of the product to get offers for.
             fields: Used to filter properties that the response should contain.
             external: Whether to query external sources in order to update information.
+            force_refresh: Whether to force re-ingestion from external sources. Overrides
+                `external`.
             schema: Response schema.
         """
         if not schema:
@@ -404,6 +420,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     {
                         "fields": fields,
                         "external": external,
+                        "force_refresh": force_refresh,
                         "schema": schema.value,
                     }
                 ),
