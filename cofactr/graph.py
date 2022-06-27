@@ -27,12 +27,28 @@ drop_none_values = lambda d: {k: v for k, v in d.items() if v is not None}
 
 
 def get_products(
-    http, url, query, fields, before, after, limit, external, schema
+    http,
+    url,
+    client_id,
+    api_key,
+    query,
+    fields,
+    before,
+    after,
+    limit,
+    external,
+    schema,
 ):  # pylint: disable=too-many-arguments
     """Get products."""
     res = http.request(
         "GET",
         f"{url}/products",
+        headers=drop_none_values(
+            {
+                "X-CLIENT-ID": client_id,
+                "X-API-KEY": api_key,
+            }
+        ),
         fields=drop_none_values(
             {
                 "q": query,
@@ -50,12 +66,26 @@ def get_products(
 
 
 def get_orgs(
-    http, url, query, before, after, limit, schema
+    http,
+    url,
+    client_id,
+    api_key,
+    query,
+    before,
+    after,
+    limit,
+    schema,
 ):  # pylint: disable=too-many-arguments
     """Get orgs."""
     res = http.request(
         "GET",
         f"{url}/orgs",
+        headers=drop_none_values(
+            {
+                "X-CLIENT-ID": client_id,
+                "X-API-KEY": api_key,
+            }
+        ),
         fields=drop_none_values(
             {
                 "q": query,
@@ -70,13 +100,13 @@ def get_orgs(
     return json.loads(res.data.decode("utf-8"))
 
 
-class GraphAPI:
+class GraphAPI:  # pylint: disable=too-many-instance-attributes
     """A client-side representation of the Cofactr graph API."""
 
     PROTOCOL: Protocol = "https"
     HOST = "graph.cofactr.com"
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         protocol: Optional[Protocol] = PROTOCOL,
         host: Optional[str] = HOST,
@@ -84,6 +114,8 @@ class GraphAPI:
         default_org_schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
         default_offer_schema: OfferSchemaName = OfferSchemaName.FLAGSHIP,
         default_supplier_schema: SupplierSchemaName = SupplierSchemaName.FLAGSHIP,
+        client_id: Optional[str] = None,
+        api_key: Optional[str] = None,
     ):
 
         self.url = f"{protocol}://{host}"
@@ -92,6 +124,8 @@ class GraphAPI:
         self.default_org_schema = default_org_schema
         self.default_offer_schema = default_offer_schema
         self.default_supplier_schema = default_supplier_schema
+        self.client_id = client_id
+        self.api_key = api_key
 
     def check_health(self):
         """Check the operational status of the service."""
@@ -129,6 +163,8 @@ class GraphAPI:
         res = get_products(
             http=self.http,
             url=self.url,
+            client_id=self.client_id,
+            api_key=self.api_key,
             query=query,
             fields=fields,
             external=external,
@@ -165,7 +201,9 @@ class GraphAPI:
                     ids,
                     executor.map(
                         lambda cpid: self.get_product(
-                            id=cpid, external=external, schema=schema
+                            id=cpid,
+                            external=external,
+                            schema=schema,
                         ),
                         ids,
                     ),
@@ -195,6 +233,8 @@ class GraphAPI:
         res = get_orgs(
             http=self.http,
             url=self.url,
+            client_id=self.client_id,
+            api_key=self.api_key,
             query=query,
             before=before,
             after=after,
@@ -231,6 +271,8 @@ class GraphAPI:
         res = get_orgs(
             http=self.http,
             url=self.url,
+            client_id=self.client_id,
+            api_key=self.api_key,
             query=query,
             before=before,
             after=after,
@@ -267,6 +309,12 @@ class GraphAPI:
         res = self.http.request(
             "GET",
             f"{self.url}/orgs/autocomplete",
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
             fields=drop_none_values(
                 {
                     "q": query,
@@ -302,6 +350,12 @@ class GraphAPI:
             self.http.request(
                 "GET",
                 f"{self.url}/products/{id}",
+                headers=drop_none_values(
+                    {
+                        "X-CLIENT-ID": self.client_id,
+                        "X-API-KEY": self.api_key,
+                    }
+                ),
                 fields=drop_none_values(
                     {
                         "fields": fields,
@@ -340,6 +394,12 @@ class GraphAPI:
             self.http.request(
                 "GET",
                 f"{self.url}/products/{product_id}/offers",
+                headers=drop_none_values(
+                    {
+                        "X-CLIENT-ID": self.client_id,
+                        "X-API-KEY": self.api_key,
+                    }
+                ),
                 fields=drop_none_values(
                     {
                         "fields": fields,
@@ -369,6 +429,12 @@ class GraphAPI:
             self.http.request(
                 "GET",
                 f"{self.url}/orgs/{id}",
+                headers=drop_none_values(
+                    {
+                        "X-CLIENT-ID": self.client_id,
+                        "X-API-KEY": self.api_key,
+                    }
+                ),
                 fields=drop_none_values({"schema": schema.value}),
             ).data.decode("utf-8")
         )
@@ -392,6 +458,12 @@ class GraphAPI:
             self.http.request(
                 "GET",
                 f"{self.url}/orgs/{id}",
+                headers=drop_none_values(
+                    {
+                        "X-CLIENT-ID": self.client_id,
+                        "X-API-KEY": self.api_key,
+                    }
+                ),
                 fields=drop_none_values({"schema": schema.value}),
             ).data.decode("utf-8")
         )
