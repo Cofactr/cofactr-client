@@ -199,12 +199,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
     ):
-        """Get a batch of products.
-
-        Note:
-            Will evolve to use a batched requests. Where, for example, each request
-            contains 50 part IDs.
-        """
+        """Get a batch of products."""
         if not schema:
             schema = self.default_product_schema
 
