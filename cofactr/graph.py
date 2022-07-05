@@ -1,7 +1,6 @@
 """Cofactr graph API client."""
 # pylint: disable=too-many-arguments
 # Python Modules
-from concurrent.futures import ThreadPoolExecutor
 import json
 from typing import Dict, List, Literal, Optional
 
@@ -40,6 +39,7 @@ def get_products(
     external,
     force_refresh,
     schema,
+    filtering,
 ):
     """Get products."""
     res = http.request(
@@ -61,6 +61,7 @@ def get_products(
                 "external": external,
                 "force_refresh": force_refresh,
                 "schema": schema,
+                "filtering": json.dumps(filtering) if filtering else None,
             }
         ),
     )
@@ -147,6 +148,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         external: Optional[bool] = True,
         force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
+        filtering: Optional[List[Dict]] = None,
     ):
         """Get products.
 
@@ -154,7 +156,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             query: Search query.
             fields: Used to filter properties that the response should contain. A field can be a
                 concrete property like "mpn" or an abstract group of properties like "assembly".
-                Example: "id,aliases,labels,statements{spec,assembly},offers"
+                Example: `"id,aliases,labels,statements{spec,assembly},offers"`.
             before: Upper page boundry, expressed as a product ID.
             after: Lower page boundry, expressed as a product ID.
             limit: Restrict the results of the query to a particular number of documents.
@@ -162,6 +164,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             force_refresh: Whether to force re-ingestion from external sources. Overrides
                 `external`.
             schema: Response schema.
+            filtering: Filter products.
+                Example: `[{"field":"id","operator":"IN","value":["CCCQSA3G9SMR","CCV1F7A8UIYH"]}]`.
         """
         if not schema:
             schema = self.default_product_schema
@@ -179,6 +183,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             after=after,
             limit=limit,
             schema=schema.value,
+            filtering=filtering,
         )
 
         Product = schema_to_product[schema]  # pylint: disable=invalid-name
@@ -203,21 +208,19 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_product_schema
 
-        with ThreadPoolExecutor() as executor:
-            return dict(
-                zip(
-                    ids,
-                    executor.map(
-                        lambda cpid: self.get_product(
-                            id=cpid,
-                            external=external,
-                            force_refresh=force_refresh,
-                            schema=schema,
-                        ),
-                        ids,
-                    ),
-                )
-            )
+        extracted_products = self.get_products(
+            external=external,
+            force_refresh=force_refresh,
+            schema=schema,
+            filtering=[{"field": "id", "operator": "IN", "value": ids}],
+            limit=len(ids),
+        )["data"]
+
+        extracted_product_map = {p.id: p for p in extracted_products}
+
+        products = {id_: extracted_product_map[id_] for id_ in ids}
+
+        return products
 
     def get_orgs(
         self,

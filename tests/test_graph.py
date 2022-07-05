@@ -78,7 +78,30 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
 
 @pytest.mark.parametrize(
     "ids",
-    [["TRGC72NRRA4W", "CCI8TPV75AW2", "CCEEPYIYIALK", "CCV1F7A8UIYH"]],
+    [
+        [
+            "CCI8TPV75AW2",
+            "CCEEPYIYIALK",
+            "CCV1F7A8UIYH",
+            "INY4PO7KBQNY",
+            "CCCQSA3G9SMR",
+            "CCVSTE6K2AFU",
+            "RCA8AQY5TJSW",
+            "RC2VSL85Q661",
+            "RCQSO03FR280",
+            "RCXSQXQNTH42",
+            "RCOORAYN6TYZ",
+            "CCGJZ8YO23N9",
+            "CCWA81Z4WGKH",
+            "CCLTDD7R51AD",
+            "CCH6S1HI9CHZ",
+            "CCCFI2O45S02",
+            "COPT8HZW65QI",
+            "COY1W16Z1VWA",
+            "RCU9WS1H4LSD",
+            "RCJYRQIWJNWH",
+        ]
+    ],
 )
 def test_get_products_by_ids(ids: List[str]):
     """Test getting parts in bulk by their IDs."""
