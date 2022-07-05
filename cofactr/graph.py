@@ -199,7 +199,19 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
     ):
-        """Get a batch of products."""
+        """Get a batch of products.
+
+        Note:
+            A maximum of 500 IDs can be provided. Any more than that, and the server will return
+            a 422 error. Consider breaking the request into batches.
+
+        Args:
+            ids: Cofactr product IDs to match on.
+            external: Whether to query external sources in order to refresh data if applicable.
+            force_refresh: Whether to force re-ingestion from external sources. Overrides
+                `external`.
+            schema: Response schema.
+        """
         if not schema:
             schema = self.default_product_schema
 
