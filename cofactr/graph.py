@@ -225,7 +225,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         extracted_product_map = {p.id: p for p in extracted_products}
 
-        products = {id_: {"data": extracted_product_map[id_]} for id_ in ids}
+        products = {id_: extracted_product_map[id_] for id_ in ids}
 
         return products
 
