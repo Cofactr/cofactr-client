@@ -254,8 +254,6 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 for deprecated_id in deprecated_ids:
                     id_to_product[deprecated_id] = product
 
-        print(id_to_product.keys())
-
         products = {id_: id_to_product[id_] for id_ in ids if id_ in id_to_product}
 
         return products
