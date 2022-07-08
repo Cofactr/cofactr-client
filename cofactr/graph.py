@@ -5,7 +5,7 @@ import json
 from typing import Dict, List, Literal, Optional
 
 # 3rd Party Modules
-import urllib3
+import httpx
 
 # Local Modules
 from cofactr.schema import (
@@ -27,7 +27,6 @@ drop_none_values = lambda d: {k: v for k, v in d.items() if v is not None}
 
 
 def get_products(
-    http,
     url,
     client_id,
     api_key,
@@ -40,10 +39,9 @@ def get_products(
     force_refresh,
     schema,
     filtering,
-):
+) -> httpx.Response:
     """Get products."""
-    res = http.request(
-        "GET",
+    res = httpx.get(
         f"{url}/products",
         headers=drop_none_values(
             {
@@ -51,7 +49,7 @@ def get_products(
                 "X-API-KEY": api_key,
             }
         ),
-        fields=drop_none_values(
+        params=drop_none_values(
             {
                 "q": query,
                 "fields": fields,
@@ -66,7 +64,10 @@ def get_products(
         ),
     )
 
-    return json.loads(res.data.decode("utf-8"))
+    # Bad requests raise an HTTPError.
+    res.raise_for_status()
+
+    return res
 
 
 def get_orgs(
@@ -215,19 +216,26 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_product_schema
 
-        extracted_products = self.get_products(
+        response = self.get_products(
             external=external,
             force_refresh=force_refresh,
             schema=schema,
             filtering=[{"field": "id", "operator": "IN", "value": ids}],
             limit=len(ids),
-        )["data"]
+        )
+        print(response)
 
-        extracted_product_map = {p.id: p for p in extracted_products}
+        return response
 
-        products = {id_: extracted_product_map[id_] for id_ in ids}
+        # extracted_product_map = {p.id: p for p in extracted_products}
 
-        return products
+        # products = {
+        #     id_: extracted_product_map[id_]
+        #     for id_ in ids
+        #     if id_ in extracted_product_map
+        # }
+
+        # return products
 
     def get_orgs(
         self,
