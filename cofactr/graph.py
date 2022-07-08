@@ -1,11 +1,13 @@
 """Cofactr graph API client."""
 # pylint: disable=too-many-arguments
 # Python Modules
+import dataclasses
 import json
 from typing import Dict, List, Literal, Optional
+from h11 import Response
 
 # 3rd Party Modules
-import urllib3
+import httpx
 
 # Local Modules
 from cofactr.schema import (
@@ -24,10 +26,10 @@ Protocol = Literal["http", "https"]
 
 
 drop_none_values = lambda d: {k: v for k, v in d.items() if v is not None}
+BATCH_LIMIT = 500
 
 
 def get_products(
-    http,
     url,
     client_id,
     api_key,
@@ -40,10 +42,11 @@ def get_products(
     force_refresh,
     schema,
     filtering,
-):
+    timeout: Optional[int] = None,
+) -> httpx.Response:
     """Get products."""
-    res = http.request(
-        "GET",
+
+    res = httpx.get(
         f"{url}/products",
         headers=drop_none_values(
             {
@@ -51,7 +54,7 @@ def get_products(
                 "X-API-KEY": api_key,
             }
         ),
-        fields=drop_none_values(
+        params=drop_none_values(
             {
                 "q": query,
                 "fields": fields,
@@ -64,13 +67,15 @@ def get_products(
                 "filtering": json.dumps(filtering) if filtering else None,
             }
         ),
+        timeout=timeout,
     )
 
-    return json.loads(res.data.decode("utf-8"))
+    res.raise_for_status()
+
+    return res
 
 
 def get_orgs(
-    http,
     url,
     client_id,
     api_key,
@@ -79,10 +84,9 @@ def get_orgs(
     after,
     limit,
     schema,
-):
+) -> Response:
     """Get orgs."""
-    res = http.request(
-        "GET",
+    res = httpx.get(
         f"{url}/orgs",
         headers=drop_none_values(
             {
@@ -90,7 +94,7 @@ def get_orgs(
                 "X-API-KEY": api_key,
             }
         ),
-        fields=drop_none_values(
+        params=drop_none_values(
             {
                 "q": query,
                 "before": before,
@@ -101,7 +105,9 @@ def get_orgs(
         ),
     )
 
-    return json.loads(res.data.decode("utf-8"))
+    res.raise_for_status()
+
+    return res
 
 
 class GraphAPI:  # pylint: disable=too-many-instance-attributes
@@ -123,7 +129,6 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
     ):
 
         self.url = f"{protocol}://{host}"
-        self.http = urllib3.PoolManager()
         self.default_product_schema = default_product_schema
         self.default_org_schema = default_org_schema
         self.default_offer_schema = default_offer_schema
@@ -134,9 +139,11 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
     def check_health(self):
         """Check the operational status of the service."""
 
-        res = self.http.request("GET", self.url)
+        res = httpx.get(self.url)
 
-        return json.loads(res.data.decode("utf-8"))
+        res.raise_for_status()
+
+        return res.json()
 
     def get_products(
         self,
@@ -171,7 +178,6 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema = self.default_product_schema
 
         res = get_products(
-            http=self.http,
             url=self.url,
             client_id=self.client_id,
             api_key=self.api_key,
@@ -186,11 +192,15 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             filtering=filtering,
         )
 
+        extracted_producs = res.json()
+
         Product = schema_to_product[schema]  # pylint: disable=invalid-name
 
-        res["data"] = [Product(**data) for data in res["data"]]
+        extracted_producs["data"] = [
+            Product(**data) for data in extracted_producs["data"]
+        ]
 
-        return res
+        return extracted_producs
 
     def get_products_by_ids(
         self,
@@ -212,6 +222,14 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 `external`.
             schema: Response schema.
         """
+        num_requested = len(ids)
+
+        if num_requested > BATCH_LIMIT:
+            raise ValueError(
+                "Too many products requested in one call: Requested"
+                f" {num_requested}, but the limit is {BATCH_LIMIT}."
+            )
+
         if not schema:
             schema = self.default_product_schema
 
@@ -220,12 +238,23 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             force_refresh=force_refresh,
             schema=schema,
             filtering=[{"field": "id", "operator": "IN", "value": ids}],
-            limit=len(ids),
-        )["data"]
+            limit=BATCH_LIMIT,
+        )
 
-        extracted_product_map = {p.id: p for p in extracted_products}
+        id_to_product = {p.id: p for p in extracted_products["data"]}
 
-        products = {id_: extracted_product_map[id_] for id_ in ids if id_ in extracted_product_map}
+        product_dataclass = schema_to_product[schema]
+
+        if "deprecated_ids" in {
+            field.name for field in dataclasses.fields(product_dataclass)
+        }:
+            for product in extracted_products["data"]:
+                deprecated_ids = product.deprecated_ids
+
+                for deprecated_id in deprecated_ids:
+                    id_to_product[deprecated_id] = product
+
+        products = {id_: id_to_product[id_] for id_ in ids if id_ in id_to_product}
 
         return products
 
@@ -250,7 +279,6 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema = self.default_org_schema
 
         res = get_orgs(
-            http=self.http,
             url=self.url,
             client_id=self.client_id,
             api_key=self.api_key,
@@ -261,11 +289,13 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema=schema.value,
         )
 
+        res_json = res.json()
+
         Org = schema_to_org[schema]  # pylint: disable=invalid-name
 
-        res["data"] = [Org(**data) for data in res["data"]]
+        res_json["data"] = [Org(**data) for data in res_json["data"]]
 
-        return res
+        return res_json
 
     def get_suppliers(
         self,
@@ -288,7 +318,6 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema = self.default_org_schema
 
         res = get_orgs(
-            http=self.http,
             url=self.url,
             client_id=self.client_id,
             api_key=self.api_key,
@@ -299,11 +328,13 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema=schema.value,
         )
 
+        res_json = res.json()
+
         Org = schema_to_org[schema]  # pylint: disable=invalid-name
 
-        res["data"] = [Org(**data) for data in res["data"]]
+        res_json["data"] = [Org(**data) for data in res_json["data"]]
 
-        return res
+        return res_json
 
     def autocomplete_orgs(
         self,
@@ -325,8 +356,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     supplier or a manufacturer.
         """
 
-        res = self.http.request(
-            "GET",
+        res = httpx.get(
             f"{self.url}/orgs/autocomplete",
             headers=drop_none_values(
                 {
@@ -334,7 +364,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
-            fields=drop_none_values(
+            params=drop_none_values(
                 {
                     "q": query,
                     "limit": limit,
@@ -343,7 +373,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             ),
         )
 
-        return json.loads(res.data.decode("utf-8"))
+        res.raise_for_status()
+
+        return res.json()
 
     def get_product(
         self,
@@ -368,32 +400,35 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_product_schema
 
-        res = json.loads(
-            self.http.request(
-                "GET",
-                f"{self.url}/products/{id}",
-                headers=drop_none_values(
-                    {
-                        "X-CLIENT-ID": self.client_id,
-                        "X-API-KEY": self.api_key,
-                    }
-                ),
-                fields=drop_none_values(
-                    {
-                        "fields": fields,
-                        "external": external,
-                        "force_refresh": force_refresh,
-                        "schema": schema.value,
-                    }
-                ),
-            ).data.decode("utf-8")
+        res = httpx.get(
+            f"{self.url}/products/{id}",
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            params=drop_none_values(
+                {
+                    "fields": fields,
+                    "external": external,
+                    "force_refresh": force_refresh,
+                    "schema": schema.value,
+                }
+            ),
         )
+
+        res.raise_for_status()
+
+        res_json = res.json()
 
         Product = schema_to_product[schema]  # pylint: disable=invalid-name
 
-        res["data"] = Product(**res["data"]) if (res and res.get("data")) else None
+        res_json["data"] = (
+            Product(**res_json["data"]) if (res_json and res_json.get("data")) else None
+        )
 
-        return res
+        return res_json
 
     def get_offers(
         self,
@@ -416,32 +451,33 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_offer_schema
 
-        res = json.loads(
-            self.http.request(
-                "GET",
-                f"{self.url}/products/{product_id}/offers",
-                headers=drop_none_values(
-                    {
-                        "X-CLIENT-ID": self.client_id,
-                        "X-API-KEY": self.api_key,
-                    }
-                ),
-                fields=drop_none_values(
-                    {
-                        "fields": fields,
-                        "external": external,
-                        "force_refresh": force_refresh,
-                        "schema": schema.value,
-                    }
-                ),
-            ).data.decode("utf-8")
+        res = httpx.get(
+            f"{self.url}/products/{product_id}/offers",
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            params=drop_none_values(
+                {
+                    "fields": fields,
+                    "external": external,
+                    "force_refresh": force_refresh,
+                    "schema": schema.value,
+                }
+            ),
         )
+
+        res.raise_for_status()
+
+        res_json = res.json()
 
         Offer = schema_to_offer[schema]  # pylint: disable=invalid-name
 
-        res["data"] = [Offer(**data) for data in res["data"]]
+        res_json["data"] = [Offer(**data) for data in res_json["data"]]
 
-        return res
+        return res_json
 
     def get_org(
         self,
@@ -452,25 +488,28 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_org_schema
 
-        res = json.loads(
-            self.http.request(
-                "GET",
-                f"{self.url}/orgs/{id}",
-                headers=drop_none_values(
-                    {
-                        "X-CLIENT-ID": self.client_id,
-                        "X-API-KEY": self.api_key,
-                    }
-                ),
-                fields=drop_none_values({"schema": schema.value}),
-            ).data.decode("utf-8")
+        res = httpx.get(
+            f"{self.url}/orgs/{id}",
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            params=drop_none_values({"schema": schema.value}),
         )
+
+        res.raise_for_status()
+
+        res_json = res.json()
 
         Org = schema_to_org[schema]  # pylint: disable=invalid-name
 
-        res["data"] = Org(**res["data"]) if (res and res.get("data")) else None
+        res_json["data"] = (
+            Org(**res_json["data"]) if (res_json and res_json.get("data")) else None
+        )
 
-        return res
+        return res_json
 
     def get_supplier(
         self,
@@ -481,22 +520,27 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_supplier_schema
 
-        res = json.loads(
-            self.http.request(
-                "GET",
-                f"{self.url}/orgs/{id}",
-                headers=drop_none_values(
-                    {
-                        "X-CLIENT-ID": self.client_id,
-                        "X-API-KEY": self.api_key,
-                    }
-                ),
-                fields=drop_none_values({"schema": schema.value}),
-            ).data.decode("utf-8")
+        res = httpx.get(
+            f"{self.url}/orgs/{id}",
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            params=drop_none_values({"schema": schema.value}),
         )
+
+        res.raise_for_status()
+
+        res_json = res.json()
 
         Supplier = schema_to_supplier[schema]  # pylint: disable=invalid-name
 
-        res["data"] = Supplier(**res["data"]) if (res and res.get("data")) else None
+        res_json["data"] = (
+            Supplier(**res_json["data"])
+            if (res_json and res_json.get("data"))
+            else None
+        )
 
-        return res
+        return res_json

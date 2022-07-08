@@ -100,6 +100,7 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
             "COY1W16Z1VWA",
             "RCU9WS1H4LSD",
             "RCJYRQIWJNWH",
+            "XX8HGWW7521L",
         ]
     ],
 )
@@ -111,10 +112,16 @@ def test_get_products_by_ids(ids: List[str]):
     res = graph.get_products_by_ids(
         ids=ids,
         external=False,
-        schema=ProductSchemaName.FLAGSHIP,
+        schema=ProductSchemaName.FLAGSHIP_V3,
     )
 
     assert set(res) == set(ids)
+
+    res = graph.get_products_by_ids(
+        ids=[],
+        external=False,
+        schema=ProductSchemaName.FLAGSHIP_V3,
+    )
 
 
 @pytest.mark.parametrize(
