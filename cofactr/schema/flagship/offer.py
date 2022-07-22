@@ -46,4 +46,6 @@ class Offer:  # pylint: disable=too-many-instance-attributes
     is_foreign: bool
 
     def __post_init__(self):
+        """Convert types."""
+
         self.seller = Seller(**self.seller)  # pylint: disable=not-a-mapping
