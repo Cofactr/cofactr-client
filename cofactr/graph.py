@@ -213,7 +213,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         external: bool = True,
         force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
-    ) -> Dict[str, Any]:
+    ):
         """Search for products associated with each query.
 
         Args:
