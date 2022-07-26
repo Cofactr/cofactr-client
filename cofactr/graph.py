@@ -3,7 +3,7 @@
 # Python Modules
 import dataclasses
 import json
-from typing import Any, Dict, List, Literal, Optional, TypedDict
+from typing import Any, Dict, List, Literal, Optional
 from h11 import Response
 
 # 3rd Party Modules
@@ -26,9 +26,6 @@ Protocol = Literal["http", "https"]
 
 
 drop_none_values = lambda d: {k: v for k, v in d.items() if v is not None}
-
-PAGE_SIZE_DEFAULT = 10
-PAGE_SIZE_LIMIT = 500
 
 BATCH_LIMIT = 500
 
