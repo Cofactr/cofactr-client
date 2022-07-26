@@ -3,7 +3,7 @@
 # Python Modules
 import dataclasses
 import json
-from typing import Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, TypedDict
 from h11 import Response
 
 # 3rd Party Modules
@@ -26,6 +26,10 @@ Protocol = Literal["http", "https"]
 
 
 drop_none_values = lambda d: {k: v for k, v in d.items() if v is not None}
+
+PAGE_SIZE_DEFAULT = 10
+PAGE_SIZE_LIMIT = 500
+
 BATCH_LIMIT = 500
 
 
@@ -86,6 +90,7 @@ def get_orgs(
     schema,
 ) -> Response:
     """Get orgs."""
+
     res = httpx.get(
         f"{url}/orgs",
         headers=drop_none_values(
@@ -201,6 +206,72 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         ]
 
         return extracted_producs
+
+    def get_products_by_searches(
+        self,
+        queries: List[str],
+        external: bool = True,
+        force_refresh: bool = False,
+        schema: Optional[ProductSchemaName] = None,
+    ) -> Dict[str, Any]:
+        """Search for products associated with each query.
+
+        Args:
+            queries: Queries to find products for.
+            external: Whether to query external sources in order to refresh data if applicable.
+            force_refresh: Whether to force re-ingestion from external sources. Overrides
+                `external`.
+            schema: Response schema.
+
+        Returns:
+            A dictionary mapping each MPN to a list of matching products.
+        """
+
+        if not queries:
+            return {}
+
+        if not schema:
+            schema = self.default_product_schema
+
+        res = httpx.post(
+            f"{self.url}/products",
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            json=[
+                {
+                    "method": "GET",
+                    "relative_url": (
+                        f"?q={query}&schema={schema.value}&external={bool(external)}"
+                        f"&force_refresh={force_refresh}"
+                    ),
+                }
+                for query in queries
+            ],
+        )
+
+        res.raise_for_status()
+
+        responses = res.json()
+
+        Product = schema_to_product[schema]  # pylint: disable=invalid-name
+
+        query_to_products: Dict[str, Any] = {}
+
+        for query, response in zip(queries, responses):
+            matches = []
+
+            if response["code"] == 200:
+                data = response["body"]["data"]
+
+                matches = [Product(**product_data) for product_data in data]
+
+            query_to_products[query] = matches
+
+        return query_to_products
 
     def get_products_by_ids(
         self,
