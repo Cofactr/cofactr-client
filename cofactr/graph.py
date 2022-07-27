@@ -178,8 +178,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             filtering: Filter products.
                 Example: `[{"field":"id","operator":"IN","value":["CCCQSA3G9SMR","CCV1F7A8UIYH"]}]`.
-            timeout: Time to wait (in seconds) for the server to issue a
-                response.
+            timeout: Time to wait (in seconds) for the server to issue a response.
         """
         if not schema:
             schema = self.default_product_schema
@@ -226,8 +225,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             force_refresh: Whether to force re-ingestion from external sources. Overrides
                 `external`.
             schema: Response schema.
-            timeout: Time to wait (in seconds) for the server to issue a
-                response.
+            timeout: Time to wait (in seconds) for the server to issue a response.
 
         Returns:
             A dictionary mapping each MPN to a list of matching products.
@@ -300,8 +298,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             force_refresh: Whether to force re-ingestion from external sources. Overrides
                 `external`.
             schema: Response schema.
-            timeout: Time to wait (in seconds) for the server to issue a
-                response.
+            timeout: Time to wait (in seconds) for the server to issue a response.
         """
         num_requested = len(ids)
 
@@ -357,8 +354,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             after: Lower page boundry, expressed as a product ID.
             limit: Restrict the results of the query to a particular number of documents.
             schema: Response schema.
-            timeout: Time to wait (in seconds) for the server to issue a
-                response.
+            timeout: Time to wait (in seconds) for the server to issue a response.
         """
         if not schema:
             schema = self.default_org_schema
@@ -400,8 +396,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             after: Lower page boundry, expressed as a product ID.
             limit: Restrict the results of the query to a particular number of documents.
             schema: Response schema.
-            timeout: Time to wait (in seconds) for the server to issue a
-                response.
+            timeout: Time to wait (in seconds) for the server to issue a response.
         """
         if not schema:
             schema = self.default_org_schema
@@ -445,8 +440,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 Example: "supplier" filters to suppliers.
                 Example: "supplier|manufacturer" filters to orgs that are a
                     supplier or a manufacturer.
-            timeout: Time to wait (in seconds) for the server to issue a
-                response.
+            timeout: Time to wait (in seconds) for the server to issue a response.
         """
 
         res = httpx.get(
@@ -491,8 +485,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             force_refresh: Whether to force re-ingestion from external sources. Overrides
                 `external`.
             schema: Response schema.
-            timeout: Time to wait (in seconds) for the server to issue a
-                response.
+            timeout: Time to wait (in seconds) for the server to issue a response.
         """
         if not schema:
             schema = self.default_product_schema
@@ -546,8 +539,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             force_refresh: Whether to force re-ingestion from external sources. Overrides
                 `external`.
             schema: Response schema.
-            timeout: Time to wait (in seconds) for the server to issue a
-                response.
+            timeout: Time to wait (in seconds) for the server to issue a response.
         """
         if not schema:
             schema = self.default_offer_schema
