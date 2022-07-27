@@ -197,3 +197,15 @@ def test_autocomplete_orgs(query, expected_completions):
     completions = res["data"]
 
     assert completions == expected_completions
+
+
+@pytest.mark.parametrize("mpns", [["2N7002LT1G", "CC0603JRNPOABN100"]])
+def test_get_products_by_searches(mpns):
+    """Test executing a batch of product searches."""
+
+    graph = GraphAPI(default_product_schema=ProductSchemaName.FLAGSHIP_V3)
+
+    mpn_to_products = graph.get_products_by_searches(queries=mpns)
+
+    assert mpn_to_products["2N7002LT1G"]
+    assert mpn_to_products["CC0603JRNPOABN100"]
