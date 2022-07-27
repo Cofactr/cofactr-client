@@ -85,6 +85,7 @@ def get_orgs(
     after,
     limit,
     schema,
+    timeout,
 ) -> Response:
     """Get orgs."""
 
@@ -105,6 +106,7 @@ def get_orgs(
                 "schema": schema,
             }
         ),
+        timeout=timeout,
     )
 
     res.raise_for_status()
@@ -158,6 +160,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
         filtering: Optional[List[Dict]] = None,
+        timeout: Optional[int] = None,
     ):
         """Get products.
 
@@ -175,6 +178,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             filtering: Filter products.
                 Example: `[{"field":"id","operator":"IN","value":["CCCQSA3G9SMR","CCV1F7A8UIYH"]}]`.
+            timeout: Time to wait (in seconds) for the server to issue a
+                response.
         """
         if not schema:
             schema = self.default_product_schema
@@ -192,6 +197,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             limit=limit,
             schema=schema.value,
             filtering=filtering,
+            timeout=timeout,
         )
 
         extracted_producs = res.json()
@@ -210,6 +216,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         external: bool = True,
         force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
+        timeout: Optional[int] = None,
     ):
         """Search for products associated with each query.
 
@@ -219,6 +226,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             force_refresh: Whether to force re-ingestion from external sources. Overrides
                 `external`.
             schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a
+                response.
 
         Returns:
             A dictionary mapping each MPN to a list of matching products.
@@ -248,6 +257,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 }
                 for query in queries
             ],
+            timeout=timeout,
         )
 
         res.raise_for_status()
@@ -276,6 +286,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         external: Optional[bool] = True,
         force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
+        timeout: Optional[int] = None,
     ):
         """Get a batch of products.
 
@@ -289,6 +300,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             force_refresh: Whether to force re-ingestion from external sources. Overrides
                 `external`.
             schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a
+                response.
         """
         num_requested = len(ids)
 
@@ -307,6 +320,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema=schema,
             filtering=[{"field": "id", "operator": "IN", "value": ids}],
             limit=BATCH_LIMIT,
+            timeout=timeout,
         )
 
         id_to_product = {p.id: p for p in extracted_products["data"]}
@@ -333,6 +347,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         after: Optional[str] = None,
         limit: Optional[int] = None,
         schema: Optional[OrgSchemaName] = None,
+        timeout: Optional[int] = None,
     ):
         """Get organizations.
 
@@ -342,6 +357,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             after: Lower page boundry, expressed as a product ID.
             limit: Restrict the results of the query to a particular number of documents.
             schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a
+                response.
         """
         if not schema:
             schema = self.default_org_schema
@@ -355,6 +372,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             after=after,
             limit=limit,
             schema=schema.value,
+            timeout=timeout,
         )
 
         res_json = res.json()
@@ -372,6 +390,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         after: Optional[str] = None,
         limit: Optional[int] = None,
         schema: Optional[OrgSchemaName] = None,
+        timeout: Optional[int] = None,
     ):
         """Get suppliers.
 
@@ -381,6 +400,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             after: Lower page boundry, expressed as a product ID.
             limit: Restrict the results of the query to a particular number of documents.
             schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a
+                response.
         """
         if not schema:
             schema = self.default_org_schema
@@ -394,6 +415,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             after=after,
             limit=limit,
             schema=schema.value,
+            timeout=timeout,
         )
 
         res_json = res.json()
@@ -409,6 +431,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         query: Optional[str] = None,
         limit: Optional[int] = None,
         types: Optional[str] = None,
+        timeout: Optional[int] = None,
     ) -> Dict[Literal["data"], Completion]:
         """Autocomplete organizations.
 
@@ -422,6 +445,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 Example: "supplier" filters to suppliers.
                 Example: "supplier|manufacturer" filters to orgs that are a
                     supplier or a manufacturer.
+            timeout: Time to wait (in seconds) for the server to issue a
+                response.
         """
 
         res = httpx.get(
@@ -439,6 +464,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "types": types,
                 }
             ),
+            timeout=timeout,
         )
 
         res.raise_for_status()
@@ -452,6 +478,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         external: Optional[bool] = True,
         force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
+        timeout: Optional[int] = None,
     ):
         """Get product.
 
@@ -464,6 +491,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             force_refresh: Whether to force re-ingestion from external sources. Overrides
                 `external`.
             schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a
+                response.
         """
         if not schema:
             schema = self.default_product_schema
@@ -484,6 +513,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "schema": schema.value,
                 }
             ),
+            timeout=timeout,
         )
 
         res.raise_for_status()
@@ -505,6 +535,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         external: Optional[bool] = True,
         force_refresh: bool = False,
         schema: Optional[OfferSchemaName] = None,
+        timeout: Optional[int] = None,
     ):
         """Get product.
 
@@ -515,6 +546,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             force_refresh: Whether to force re-ingestion from external sources. Overrides
                 `external`.
             schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a
+                response.
         """
         if not schema:
             schema = self.default_offer_schema
@@ -535,6 +568,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "schema": schema.value,
                 }
             ),
+            timeout=timeout,
         )
 
         res.raise_for_status()
@@ -551,6 +585,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         self,
         id: str,
         schema: Optional[OrgSchemaName] = None,
+        timeout: Optional[int] = None,
     ):
         """Get organization."""
         if not schema:
@@ -565,6 +600,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 }
             ),
             params=drop_none_values({"schema": schema.value}),
+            timeout=timeout,
         )
 
         res.raise_for_status()
@@ -583,6 +619,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         self,
         id: str,
         schema: Optional[SupplierSchemaName] = None,
+        timeout: Optional[int] = None,
     ):
         """Get supplier."""
         if not schema:
@@ -597,6 +634,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 }
             ),
             params=drop_none_values({"schema": schema.value}),
+            timeout=timeout,
         )
 
         res.raise_for_status()
