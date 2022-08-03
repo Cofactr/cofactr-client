@@ -13,3 +13,8 @@ class Part(FlagshipV2Part):
 
     deprecated_ids: List[str]
     min_lead: Optional[int]
+
+    def __post_init__(self):
+        """Post initialization."""
+
+        self.mfg = self.mfr

@@ -15,6 +15,7 @@ class Part(FlagshipV3Part):  # pylint: disable=too-many-instance-attributes
     offers: List[FlagshipOffer]
 
     def __post_init__(self):
-        """Convert types."""
+        """Post initialization."""
 
+        self.mfg = self.mfr
         self.offers = [FlagshipOffer(**offer) for offer in self.offers]
