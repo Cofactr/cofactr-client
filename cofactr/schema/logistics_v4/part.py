@@ -27,3 +27,8 @@ class Part:  # pylint: disable=too-many-instance-attributes
     termination_type: TerminationType
 
     updated_at: Optional[str]
+
+    def __post_init__(self):
+        """Post initialization."""
+
+        self.mfg = self.mfr
