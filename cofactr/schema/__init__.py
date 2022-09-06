@@ -12,6 +12,8 @@ from cofactr.schema.flagship_v2.part import Part as FlagshipV2Part
 from cofactr.schema.flagship_v3.part import Part as FlagshipV3Part
 from cofactr.schema.logistics.part import Part as LogisticsPart
 from cofactr.schema.logistics_v2.part import Part as LogisticsV2Part
+from cofactr.schema.logistics_v2.offer import Offer as LogisticsV2Offer
+from cofactr.schema.logistics_v2.seller import Seller as LogisticsV2Seller
 from cofactr.schema.logistics_v3.part import Part as LogisticsV3Part
 from cofactr.schema.logistics_v4.part import Part as LogisticsV4Part
 from cofactr.schema.flagship.seller import Seller as FlagshipSeller
@@ -51,12 +53,14 @@ class OfferSchemaName(str, Enum):
     INTERNAL = "internal"
     FLAGSHIP = "flagship"
     LOGISTICS = "logistics"
+    LOGISTICS_V2 = "logistics-v2"
 
 
 schema_to_offer: Dict[OfferSchemaName, Callable] = {
     OfferSchemaName.INTERNAL: identity,
     OfferSchemaName.FLAGSHIP: FlagshipOffer,
     OfferSchemaName.LOGISTICS: LogisticsOffer,
+    OfferSchemaName.LOGISTICS_V2: LogisticsV2Offer,
 }
 
 
@@ -66,12 +70,14 @@ class OrgSchemaName(str, Enum):
     INTERNAL = "internal"
     FLAGSHIP = "flagship"
     LOGISTICS = "logistics"
+    LOGISTICS_V2 = "logistics-v2"
 
 
 schema_to_org: Dict[OrgSchemaName, Callable] = {
     OrgSchemaName.INTERNAL: identity,
     OrgSchemaName.FLAGSHIP: FlagshipSeller,
     OrgSchemaName.LOGISTICS: FlagshipSeller,
+    OrgSchemaName.LOGISTICS_V2: LogisticsV2Seller,
 }
 
 
@@ -81,10 +87,12 @@ class SupplierSchemaName(str, Enum):
     INTERNAL = "internal"
     FLAGSHIP = "flagship"
     LOGISTICS = "logistics"
+    LOGISTICS_V2 = "logistics-v2"
 
 
 schema_to_supplier: Dict[SupplierSchemaName, Callable] = {
     SupplierSchemaName.INTERNAL: identity,
     SupplierSchemaName.FLAGSHIP: FlagshipSeller,
     SupplierSchemaName.LOGISTICS: FlagshipSeller,
+    SupplierSchemaName.LOGISTICS_V2: LogisticsV2Seller,
 }
