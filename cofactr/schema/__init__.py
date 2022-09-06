@@ -94,5 +94,5 @@ schema_to_supplier: Dict[SupplierSchemaName, Callable] = {
     SupplierSchemaName.INTERNAL: identity,
     SupplierSchemaName.FLAGSHIP: FlagshipSeller,
     SupplierSchemaName.LOGISTICS: FlagshipSeller,
-    OrgSchemaName.LOGISTICS_V2: LogisticsV2Seller,
+    SupplierSchemaName.LOGISTICS_V2: LogisticsV2Seller,
 }
