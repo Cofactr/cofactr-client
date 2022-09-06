@@ -4,7 +4,6 @@
 import dataclasses
 import json
 from typing import Any, Dict, List, Literal, Optional
-from h11 import Response
 
 # 3rd Party Modules
 import httpx
@@ -86,7 +85,7 @@ def get_orgs(
     limit,
     schema,
     timeout,
-) -> Response:
+) -> httpx.Response:
     """Get orgs."""
 
     res = httpx.get(

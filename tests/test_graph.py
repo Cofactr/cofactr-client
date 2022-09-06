@@ -1,8 +1,10 @@
 """Test GraphAPI."""
 # Standard Modules
+from pathlib import Path
 from typing import Any, Dict, List
 
 # 3rd Party Modules
+from dotenv import dotenv_values
 import pytest
 
 # Local Modules
@@ -13,6 +15,9 @@ from cofactr.schema import (
     SupplierSchemaName,
 )
 
+CONFIG = dotenv_values(Path(__file__).parent / "../.env.test")
+CLIENT_ID = CONFIG["CLIENT_ID"]
+API_KEY = CONFIG["API_KEY"]
 
 @pytest.mark.parametrize(
     "mpn",
@@ -21,7 +26,7 @@ from cofactr.schema import (
 def test_search_part(mpn: str):
     """Test searching for parts."""
 
-    graph = GraphAPI()
+    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
     res = graph.get_products(
         query=mpn,
@@ -42,7 +47,7 @@ def test_search_part(mpn: str):
             {
                 "id": "TRRQ3ESYFO28",
                 "mpn": "IRFH5006TRPBF",
-                "hero_image": "https://assets.cofactr.com/TRRQ3ESYFO28/part-img.jpg",
+                # "hero_image": "https://assets.cofactr.com/TRRQ3ESYFO28/part-img.jpg",
             },
         ),
         (
@@ -51,7 +56,7 @@ def test_search_part(mpn: str):
             {
                 "id": "TRRQ3ESYFO28",
                 "mpn": "IRFH5006TRPBF",
-                "hero_image": "https://assets.cofactr.com/TRRQ3ESYFO28/part-img.jpg",
+                # "hero_image": "https://assets.cofactr.com/TRRQ3ESYFO28/part-img.jpg",
             },
         ),
     ],
@@ -59,7 +64,7 @@ def test_search_part(mpn: str):
 def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, Any]):
     """Test getting a product by its ID."""
 
-    graph = GraphAPI()
+    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
     res = graph.get_product(
         id=cpid,
@@ -107,7 +112,7 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
 def test_get_products_by_ids(ids: List[str]):
     """Test getting parts in bulk by their IDs."""
 
-    graph = GraphAPI()
+    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
     res = graph.get_products_by_ids(
         ids=ids,
@@ -126,12 +131,12 @@ def test_get_products_by_ids(ids: List[str]):
 
 @pytest.mark.parametrize(
     "cpid",
-    ["IM60640MOX6H"],
+    ["CCV1F7A8UIYH"],
 )
 def test_get_offers(cpid: str):
     """Test getting offers."""
 
-    graph = GraphAPI()
+    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
     flagship_res = graph.get_offers(
         product_id=cpid,
@@ -144,7 +149,7 @@ def test_get_offers(cpid: str):
     logistics_res = graph.get_offers(
         product_id=cpid,
         external=False,
-        schema=OfferSchemaName.LOGISTICS,
+        schema=OfferSchemaName.LOGISTICS_V2,
     )
 
     assert logistics_res
@@ -154,7 +159,7 @@ def test_get_offers(cpid: str):
 def test_get_suppliers(query):
     """Test getting suppliers."""
 
-    graph = GraphAPI()
+    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
     res = graph.get_suppliers(query=query, schema=SupplierSchemaName.FLAGSHIP)
 
@@ -168,7 +173,7 @@ def test_get_suppliers(query):
 def test_get_supplier(org_id):
     """Test getting a supplier."""
 
-    graph = GraphAPI()
+    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
     res = graph.get_supplier(id=org_id, schema=SupplierSchemaName.FLAGSHIP)
 
@@ -190,7 +195,7 @@ def test_get_supplier(org_id):
 def test_autocomplete_orgs(query, expected_completions):
     """Test autocompleting orgs."""
 
-    graph = GraphAPI()
+    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
     res = graph.autocomplete_orgs(query=query, types="supplier")
 
@@ -203,7 +208,7 @@ def test_autocomplete_orgs(query, expected_completions):
 def test_get_products_by_searches(mpns):
     """Test executing a batch of product searches."""
 
-    graph = GraphAPI(default_product_schema=ProductSchemaName.FLAGSHIP_V3)
+    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY, default_product_schema=ProductSchemaName.FLAGSHIP_V3)
 
     mpn_to_products = graph.get_products_by_searches(queries=mpns)
 
