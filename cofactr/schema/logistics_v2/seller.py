@@ -9,6 +9,7 @@ class Seller:  # pylint: disable=too-many-instance-attributes
     """Part seller."""
 
     id: str
+    deprecated_ids: List[str]
     label: str
     aliases: List[str]
     authenticity_score: Optional[int]
