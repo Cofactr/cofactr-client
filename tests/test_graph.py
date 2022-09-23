@@ -224,6 +224,4 @@ def test_get_suppliers_by_ids(ids):
 
     id_to_supplier = graph.get_suppliers_by_ids(ids=ids)
 
-    print(id_to_supplier)
-
     assert set(id_to_supplier.keys()) == set(ids)
