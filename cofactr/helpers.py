@@ -1,5 +1,6 @@
 """Helper functions."""
 # Standard Modules
+import dataclasses
 from functools import reduce
 from operator import getitem
 from typing import List
@@ -29,3 +30,20 @@ def drop_deprecated(data: List[Mainsnak]):
 
 
 identity = lambda x: x
+
+
+def parse_entities(ids, entities, entity_dataclass):
+    """Parse entities."""
+
+    id_to_entity = {e.id: e for e in entities}
+
+    if "deprecated_ids" in {
+        field.name for field in dataclasses.fields(entity_dataclass)
+    }:
+        for entity in entities:
+            deprecated_ids = entity.deprecated_ids
+
+            for deprecated_id in deprecated_ids:
+                id_to_entity[deprecated_id] = entity
+
+    return {id_: id_to_entity[id_] for id_ in ids if id_ in id_to_entity}
