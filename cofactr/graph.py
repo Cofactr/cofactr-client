@@ -1,7 +1,6 @@
 """Cofactr graph API client."""
 # pylint: disable=too-many-arguments
 # Python Modules
-import dataclasses
 import json
 from typing import Any, Dict, List, Literal, Optional
 
