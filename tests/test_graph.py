@@ -216,7 +216,7 @@ def test_get_products_by_searches(mpns):
     assert mpn_to_products["CC0603JRNPOABN100"]
 
 
-@pytest.mark.parametrize("ids", [["622fb450e4c292d8287b0af5", "622fb450e4c292d8287b0b00"]])
+@pytest.mark.parametrize("ids", [["622fb450e4c292d8287b0af5", "622fb450e4c292d8287b0b00"], ["622fb450e4c292d8287b0b0d"]])
 def test_get_suppliers_by_ids(ids):
     """Test getting suppliers in bulk by their IDs."""
 
