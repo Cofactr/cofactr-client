@@ -69,6 +69,7 @@ def get_products(
             }
         ),
         timeout=timeout,
+        follow_redirects=True,
     )
 
     res.raise_for_status()
@@ -109,6 +110,7 @@ def get_orgs(
             }
         ),
         timeout=timeout,
+        follow_redirects=True,
     )
 
     res.raise_for_status()
@@ -148,6 +150,7 @@ def get_suppliers(
             }
         ),
         timeout=timeout,
+        follow_redirects=True,
     )
 
     res.raise_for_status()
@@ -537,6 +540,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 }
             ),
             timeout=timeout,
+            follow_redirects=True,
         )
 
         res.raise_for_status()
@@ -585,6 +589,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 }
             ),
             timeout=timeout,
+            follow_redirects=True,
         )
 
         res.raise_for_status()
@@ -639,6 +644,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 }
             ),
             timeout=timeout,
+            follow_redirects=True,
         )
 
         res.raise_for_status()
@@ -671,6 +677,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             ),
             params=drop_none_values({"schema": schema.value}),
             timeout=timeout,
+            follow_redirects=True,
         )
 
         res.raise_for_status()
@@ -705,6 +712,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             ),
             params=drop_none_values({"schema": schema.value}),
             timeout=timeout,
+            follow_redirects=True,
         )
 
         res.raise_for_status()
