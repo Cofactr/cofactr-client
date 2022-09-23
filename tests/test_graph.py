@@ -214,3 +214,14 @@ def test_get_products_by_searches(mpns):
 
     assert mpn_to_products["2N7002LT1G"]
     assert mpn_to_products["CC0603JRNPOABN100"]
+
+
+@pytest.mark.parametrize("ids", [["622fb450e4c292d8287b0af5", "622fb450e4c292d8287b0b00"]])
+def test_get_suppliers_by_ids(ids):
+    """Test getting suppliers in bulk by their IDs."""
+
+    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY, default_supplier_schema=SupplierSchemaName.FLAGSHIP)
+
+    id_to_supplier = graph.get_suppliers_by_ids(ids=ids)
+
+    assert set(id_to_supplier.keys()) == set(ids)

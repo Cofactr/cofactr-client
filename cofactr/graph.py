@@ -1,7 +1,6 @@
 """Cofactr graph API client."""
 # pylint: disable=too-many-arguments
 # Python Modules
-import dataclasses
 import json
 from typing import Any, Dict, List, Literal, Optional
 
@@ -9,6 +8,7 @@ from typing import Any, Dict, List, Literal, Optional
 import httpx
 
 # Local Modules
+from cofactr.helpers import parse_entities
 from cofactr.schema import (
     OfferSchemaName,
     OrgSchemaName,
@@ -68,6 +68,7 @@ def get_products(
             }
         ),
         timeout=timeout,
+        follow_redirects=True,
     )
 
     res.raise_for_status()
@@ -85,6 +86,7 @@ def get_orgs(
     limit,
     schema,
     timeout,
+    filtering,
 ) -> httpx.Response:
     """Get orgs."""
 
@@ -103,15 +105,56 @@ def get_orgs(
                 "after": after,
                 "limit": limit,
                 "schema": schema,
+                "filtering": json.dumps(filtering) if filtering else None,
             }
         ),
         timeout=timeout,
+        follow_redirects=True,
     )
 
     res.raise_for_status()
 
     return res
 
+def get_suppliers(
+    url,
+    client_id,
+    api_key,
+    query,
+    before,
+    after,
+    limit,
+    schema,
+    timeout,
+    filtering,
+) -> httpx.Response:
+    """Get orgs."""
+
+    res = httpx.get(
+        f"{url}/orgs/suppliers",
+        headers=drop_none_values(
+            {
+                "X-CLIENT-ID": client_id,
+                "X-API-KEY": api_key,
+            }
+        ),
+        params=drop_none_values(
+            {
+                "q": query,
+                "before": before,
+                "after": after,
+                "limit": limit,
+                "schema": schema,
+                "filtering": json.dumps(filtering) if filtering else None,
+            }
+        ),
+        timeout=timeout,
+        follow_redirects=True,
+    )
+
+    res.raise_for_status()
+
+    return res
 
 class GraphAPI:  # pylint: disable=too-many-instance-attributes
     """A client-side representation of the Cofactr graph API."""
@@ -319,22 +362,13 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout=timeout,
         )
 
-        id_to_product = {p.id: p for p in extracted_products["data"]}
+        id_to_product = parse_entities(
+            ids=ids,
+            entities=extracted_products["data"],
+            entity_dataclass=schema_to_product[schema],
+        )
 
-        product_dataclass = schema_to_product[schema]
-
-        if "deprecated_ids" in {
-            field.name for field in dataclasses.fields(product_dataclass)
-        }:
-            for product in extracted_products["data"]:
-                deprecated_ids = product.deprecated_ids
-
-                for deprecated_id in deprecated_ids:
-                    id_to_product[deprecated_id] = product
-
-        products = {id_: id_to_product[id_] for id_ in ids if id_ in id_to_product}
-
-        return products
+        return id_to_product
 
     def get_orgs(
         self,
@@ -386,6 +420,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         limit: Optional[int] = None,
         schema: Optional[OrgSchemaName] = None,
         timeout: Optional[int] = None,
+        filtering: Optional[List[Dict]] = None,
     ):
         """Get suppliers.
 
@@ -396,11 +431,13 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             limit: Restrict the results of the query to a particular number of documents.
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
+            filtering: Filter suppliers.
+                Example: `[{"field":"id","operator":"IN","value":["622fb450e4c292d8287b0af5"]}]`.
         """
         if not schema:
             schema = self.default_org_schema
 
-        res = get_orgs(
+        res = get_suppliers(
             url=self.url,
             client_id=self.client_id,
             api_key=self.api_key,
@@ -410,6 +447,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             limit=limit,
             schema=schema.value,
             timeout=timeout,
+            filtering=filtering,
         )
 
         res_json = res.json()
@@ -419,6 +457,49 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         res_json["data"] = [Org(**data) for data in res_json["data"]]
 
         return res_json
+
+    def get_suppliers_by_ids(
+        self,
+        ids: List[str],
+        schema: Optional[OrgSchemaName] = None,
+        timeout: Optional[int] = None,
+    ):
+        """Get a batch of suppliers.
+
+        Note:
+            A maximum of 500 IDs can be provided. Any more than that, and the server will return
+            a 422 error. Consider breaking the request into batches.
+
+        Args:
+            ids: Cofactr org IDs to match on.
+            schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+        """
+        num_requested = len(ids)
+
+        if num_requested > BATCH_LIMIT:
+            raise ValueError(
+                "Too many suppliers requested in one call: Requested"
+                f" {num_requested}, but the limit is {BATCH_LIMIT}."
+            )
+
+        if not schema:
+            schema = self.default_product_schema
+
+        extracted_suppliers = self.get_suppliers(
+            schema=schema,
+            filtering=[{"field": "id", "operator": "IN", "value": ids}],
+            limit=BATCH_LIMIT,
+            timeout=timeout,
+        )
+
+        id_to_supplier = parse_entities(
+            ids=ids,
+            entities=extracted_suppliers["data"],
+            entity_dataclass=schema_to_supplier[schema],
+        )
+
+        return id_to_supplier
 
     def autocomplete_orgs(
         self,
@@ -458,6 +539,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 }
             ),
             timeout=timeout,
+            follow_redirects=True,
         )
 
         res.raise_for_status()
@@ -506,6 +588,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 }
             ),
             timeout=timeout,
+            follow_redirects=True,
         )
 
         res.raise_for_status()
@@ -560,6 +643,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 }
             ),
             timeout=timeout,
+            follow_redirects=True,
         )
 
         res.raise_for_status()
@@ -592,6 +676,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             ),
             params=drop_none_values({"schema": schema.value}),
             timeout=timeout,
+            follow_redirects=True,
         )
 
         res.raise_for_status()
@@ -626,6 +711,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             ),
             params=drop_none_values({"schema": schema.value}),
             timeout=timeout,
+            follow_redirects=True,
         )
 
         res.raise_for_status()
