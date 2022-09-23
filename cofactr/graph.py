@@ -116,6 +116,7 @@ def get_orgs(
 
     return res
 
+
 def get_suppliers(
     url,
     client_id,
@@ -155,6 +156,7 @@ def get_suppliers(
     res.raise_for_status()
 
     return res
+
 
 class GraphAPI:  # pylint: disable=too-many-instance-attributes
     """A client-side representation of the Cofactr graph API."""
@@ -222,6 +224,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 Example: `[{"field":"id","operator":"IN","value":["CCCQSA3G9SMR","CCV1F7A8UIYH"]}]`.
             timeout: Time to wait (in seconds) for the server to issue a response.
         """
+
         if not schema:
             schema = self.default_product_schema
 
@@ -342,6 +345,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
         """
+
         num_requested = len(ids)
 
         if num_requested > BATCH_LIMIT:
@@ -378,6 +382,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         limit: Optional[int] = None,
         schema: Optional[OrgSchemaName] = None,
         timeout: Optional[int] = None,
+        filtering: Optional[List[Dict]] = None,
     ):
         """Get organizations.
 
@@ -388,56 +393,14 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             limit: Restrict the results of the query to a particular number of documents.
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
+            filtering: Filter orgs.
+                Example: `[{"field":"id","operator":"IN","value":["622fb450e4c292d8287b0af5"]}]`.
         """
+
         if not schema:
             schema = self.default_org_schema
 
         res = get_orgs(
-            url=self.url,
-            client_id=self.client_id,
-            api_key=self.api_key,
-            query=query,
-            before=before,
-            after=after,
-            limit=limit,
-            schema=schema.value,
-            timeout=timeout,
-        )
-
-        res_json = res.json()
-
-        Org = schema_to_org[schema]  # pylint: disable=invalid-name
-
-        res_json["data"] = [Org(**data) for data in res_json["data"]]
-
-        return res_json
-
-    def get_suppliers(
-        self,
-        query: Optional[str] = None,
-        before: Optional[str] = None,
-        after: Optional[str] = None,
-        limit: Optional[int] = None,
-        schema: Optional[OrgSchemaName] = None,
-        timeout: Optional[int] = None,
-        filtering: Optional[List[Dict]] = None,
-    ):
-        """Get suppliers.
-
-        Args:
-            query: Search query.
-            before: Upper page boundry, expressed as a product ID.
-            after: Lower page boundry, expressed as a product ID.
-            limit: Restrict the results of the query to a particular number of documents.
-            schema: Response schema.
-            timeout: Time to wait (in seconds) for the server to issue a response.
-            filtering: Filter suppliers.
-                Example: `[{"field":"id","operator":"IN","value":["622fb450e4c292d8287b0af5"]}]`.
-        """
-        if not schema:
-            schema = self.default_org_schema
-
-        res = get_suppliers(
             url=self.url,
             client_id=self.client_id,
             api_key=self.api_key,
@@ -458,10 +421,57 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return res_json
 
+    def get_suppliers(
+        self,
+        query: Optional[str] = None,
+        before: Optional[str] = None,
+        after: Optional[str] = None,
+        limit: Optional[int] = None,
+        schema: Optional[SupplierSchemaName] = None,
+        timeout: Optional[int] = None,
+        filtering: Optional[List[Dict]] = None,
+    ):
+        """Get suppliers.
+
+        Args:
+            query: Search query.
+            before: Upper page boundry, expressed as a product ID.
+            after: Lower page boundry, expressed as a product ID.
+            limit: Restrict the results of the query to a particular number of documents.
+            schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+            filtering: Filter suppliers.
+                Example: `[{"field":"id","operator":"IN","value":["622fb450e4c292d8287b0af5"]}]`.
+        """
+
+        if not schema:
+            schema = self.default_supplier_schema
+
+        res = get_suppliers(
+            url=self.url,
+            client_id=self.client_id,
+            api_key=self.api_key,
+            query=query,
+            before=before,
+            after=after,
+            limit=limit,
+            schema=schema.value,
+            timeout=timeout,
+            filtering=filtering,
+        )
+
+        res_json = res.json()
+
+        Supplier = schema_to_supplier[schema]  # pylint: disable=invalid-name
+
+        res_json["data"] = [Supplier(**data) for data in res_json["data"]]
+
+        return res_json
+
     def get_suppliers_by_ids(
         self,
         ids: List[str],
-        schema: Optional[OrgSchemaName] = None,
+        schema: Optional[SupplierSchemaName] = None,
         timeout: Optional[int] = None,
     ):
         """Get a batch of suppliers.
@@ -475,6 +485,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
         """
+
         num_requested = len(ids)
 
         if num_requested > BATCH_LIMIT:
@@ -484,7 +495,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             )
 
         if not schema:
-            schema = self.default_product_schema
+            schema = self.default_supplier_schema
 
         extracted_suppliers = self.get_suppliers(
             schema=schema,
@@ -568,6 +579,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
         """
+
         if not schema:
             schema = self.default_product_schema
 
@@ -623,6 +635,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
         """
+
         if not schema:
             schema = self.default_offer_schema
 
@@ -663,6 +676,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         timeout: Optional[int] = None,
     ):
         """Get organization."""
+
         if not schema:
             schema = self.default_org_schema
 
@@ -698,6 +712,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         timeout: Optional[int] = None,
     ):
         """Get supplier."""
+
         if not schema:
             schema = self.default_supplier_schema
 

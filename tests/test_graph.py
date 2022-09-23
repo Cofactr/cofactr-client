@@ -19,6 +19,7 @@ CONFIG = dotenv_values(Path(__file__).parent / "../.env.test")
 CLIENT_ID = CONFIG["CLIENT_ID"]
 API_KEY = CONFIG["API_KEY"]
 
+
 @pytest.mark.parametrize(
     "mpn",
     ["IRFH4251DTRPBF"],
@@ -208,7 +209,11 @@ def test_autocomplete_orgs(query, expected_completions):
 def test_get_products_by_searches(mpns):
     """Test executing a batch of product searches."""
 
-    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY, default_product_schema=ProductSchemaName.FLAGSHIP_V3)
+    graph = GraphAPI(
+        client_id=CLIENT_ID,
+        api_key=API_KEY,
+        default_product_schema=ProductSchemaName.FLAGSHIP_V3,
+    )
 
     mpn_to_products = graph.get_products_by_searches(queries=mpns)
 
@@ -216,11 +221,15 @@ def test_get_products_by_searches(mpns):
     assert mpn_to_products["CC0603JRNPOABN100"]
 
 
-@pytest.mark.parametrize("ids", [["622fb450e4c292d8287b0af5", "622fb450e4c292d8287b0b00"], ["622fb450e4c292d8287b0b0d"]])
+@pytest.mark.parametrize("ids", [["622fb450e4c292d8287b0b0d"]])
 def test_get_suppliers_by_ids(ids):
     """Test getting suppliers in bulk by their IDs."""
 
-    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY, default_supplier_schema=SupplierSchemaName.FLAGSHIP)
+    graph = GraphAPI(
+        client_id=CLIENT_ID,
+        api_key=API_KEY,
+        default_supplier_schema=SupplierSchemaName.FLAGSHIP,
+    )
 
     id_to_supplier = graph.get_suppliers_by_ids(ids=ids)
 
