@@ -47,7 +47,7 @@ def get_products(
     """Get products."""
 
     res = httpx.get(
-        f"{url}/products",
+        f"{url}/products/",
         headers=drop_none_values(
             {
                 "X-CLIENT-ID": client_id,
@@ -283,7 +283,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema = self.default_product_schema
 
         res = httpx.post(
-            f"{self.url}/products",
+            f"{self.url}/products/",
             headers=drop_none_values(
                 {
                     "X-CLIENT-ID": self.client_id,
@@ -301,6 +301,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 for query in queries
             ],
             timeout=timeout,
+            follow_redirects=True,
         )
 
         res.raise_for_status()
