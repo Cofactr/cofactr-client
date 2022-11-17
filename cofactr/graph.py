@@ -349,6 +349,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         num_requested = len(ids)
 
+        if not num_requested:
+            return {}
+
         if num_requested > BATCH_LIMIT:
             raise ValueError(
                 "Too many products requested in one call: Requested"
@@ -488,6 +491,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         """
 
         num_requested = len(ids)
+
+        if not num_requested:
+            return {}
 
         if num_requested > BATCH_LIMIT:
             raise ValueError(
