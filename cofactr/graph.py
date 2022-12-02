@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 # 3rd Party Modules
 import httpx
+from more_itertools import batched, flatten
 
 # Local Modules
 from cofactr.helpers import parse_entities
@@ -332,11 +333,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[ProductSchemaName] = None,
         timeout: Optional[int] = None,
     ):
-        """Get a batch of products.
+        """Get a batch of products by ids.
 
-        Note:
-            A maximum of 500 IDs can be provided. Any more than that, and the server will return
-            a 422 error. Consider breaking the request into batches.
+        Note: Multiple requests are made if more than 250 ids are provided.
 
         Args:
             ids: Cofactr product IDs to match on.
@@ -347,24 +346,37 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout: Time to wait (in seconds) for the server to issue a response.
         """
 
-        num_requested = len(ids)
-
-        if num_requested > BATCH_LIMIT:
-            raise ValueError(
-                "Too many products requested in one call: Requested"
-                f" {num_requested}, but the limit is {BATCH_LIMIT}."
-            )
+        batch_size = 250
 
         if not schema:
             schema = self.default_product_schema
 
-        extracted_products = self.get_products(
-            external=external,
-            force_refresh=force_refresh,
-            schema=schema,
-            filtering=[{"field": "id", "operator": "IN", "value": ids}],
-            limit=BATCH_LIMIT,
-            timeout=timeout,
+        batched_products = [
+            self.get_products(
+                external=external,
+                force_refresh=force_refresh,
+                schema=schema,
+                filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
+                limit=batch_size,
+                timeout=timeout,
+            )
+            for batched_ids in batched(ids, n=batch_size)
+        ]
+
+        products_data = list(
+            flatten([products["data"] for products in batched_products])
+        )
+
+        extracted_products = (
+            {
+                "data": products_data,
+                "paging": {
+                    "previous": f"/products?limit={len(ids)}&before={products_data[0].id}",
+                    "next": None,
+                },
+            }
+            if products_data
+            else {"data": [], "paging": {}}
         )
 
         id_to_product = parse_entities(

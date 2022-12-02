@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cofactr"
-version = "5.13.2"
+version = "5.13.3"
 description = "Client library for accessing Cofactr data."
 authors = ["Noah Trueblood <noah@cofactr.com>", "Riley Harrington <riley@cofactr.com>"]
 license = "MIT"
@@ -21,6 +21,7 @@ include = [
 [tool.poetry.dependencies]
 python = "^3.10"
 httpx = "^0.23.0"
+more-itertools = "^9.0.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.942"
