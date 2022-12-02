@@ -122,8 +122,6 @@ def test_get_products_by_ids(ids: List[str]):
         schema=ProductSchemaName.FLAGSHIP_V3,
     )
 
-    print(res)
-
     assert set(res) == set(ids)
 
 
