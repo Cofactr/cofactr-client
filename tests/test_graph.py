@@ -85,6 +85,7 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
 @pytest.mark.parametrize(
     "ids",
     [
+        [],
         [
             "CCI8TPV75AW2",
             "CCEEPYIYIALK",
@@ -107,7 +108,7 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
             "RCU9WS1H4LSD",
             "RCJYRQIWJNWH",
             "XX8HGWW7521L",
-        ]
+        ],
     ],
 )
 def test_get_products_by_ids(ids: List[str]):
@@ -121,13 +122,9 @@ def test_get_products_by_ids(ids: List[str]):
         schema=ProductSchemaName.FLAGSHIP_V3,
     )
 
-    assert set(res) == set(ids)
+    print(res)
 
-    res = graph.get_products_by_ids(
-        ids=[],
-        external=False,
-        schema=ProductSchemaName.FLAGSHIP_V3,
-    )
+    assert set(res) == set(ids)
 
 
 @pytest.mark.parametrize(
