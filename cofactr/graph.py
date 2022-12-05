@@ -245,16 +245,16 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout=timeout,
         )
 
-        extracted_producs = res.json()
+        extracted_products = res.json()
 
         if schema != ProductSchemaName.INTERNAL:
             Product = schema_to_product[schema]  # pylint: disable=invalid-name
 
-            extracted_producs["data"] = [
-                Product(**data) for data in extracted_producs["data"]
+            extracted_products["data"] = [
+                Product(**data) for data in extracted_products["data"]
             ]
 
-        return extracted_producs
+        return extracted_products
 
     def get_products_by_searches(
         self,
@@ -420,7 +420,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             for product in products:
                 canonical_id = product["id"]
 
-                for key in [canonical_id, *product["deprecated_ids"]]:
+                for key in [canonical_id, *(product.get("deprecated_ids") or [])]:
                     id_to_canonical_id[key] = canonical_id
 
         return {id_: id_to_canonical_id.get(id_) for id_ in ids}
