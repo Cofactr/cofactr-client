@@ -247,9 +247,10 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         extracted_products = res.json()
 
-        if schema != ProductSchemaName.INTERNAL:
-            Product = schema_to_product[schema]  # pylint: disable=invalid-name
+        # Handle schemas that have parsers.
+        Product = schema_to_product.get(schema)  # pylint: disable=invalid-name
 
+        if Product:
             extracted_products["data"] = [
                 Product(**data) for data in extracted_products["data"]
             ]
