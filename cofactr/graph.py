@@ -245,15 +245,17 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout=timeout,
         )
 
-        extracted_producs = res.json()
+        extracted_products = res.json()
 
-        Product = schema_to_product[schema]  # pylint: disable=invalid-name
+        # Handle schemas that have parsers.
+        Product = schema_to_product.get(schema)  # pylint: disable=invalid-name
 
-        extracted_producs["data"] = [
-            Product(**data) for data in extracted_producs["data"]
-        ]
+        if Product:
+            extracted_products["data"] = [
+                Product(**data) for data in extracted_products["data"]
+            ]
 
-        return extracted_producs
+        return extracted_products
 
     def get_products_by_searches(
         self,
@@ -386,6 +388,43 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         )
 
         return id_to_product
+
+    def get_canonical_product_ids(
+        self,
+        ids: List[str],
+        timeout: Optional[int] = None,
+    ):
+        """Get the canonical product ID for each of the given IDs, which may or may not be
+        deprecated.
+        """
+
+        batch_size = 500
+
+        batched_products = [
+            self.get_products(
+                fields="id,deprecated_ids",
+                external=False,
+                force_refresh=False,
+                schema=ProductSchemaName.INTERNAL,
+                filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
+                limit=batch_size,
+                timeout=timeout,
+            )
+            for batched_ids in batched(ids, n=batch_size)
+        ]
+
+        id_to_canonical_id = {}
+
+        for res in batched_products:
+            products = res.get("data", [])
+
+            for product in products:
+                canonical_id = product["id"]
+
+                for key in [canonical_id, *(product.get("deprecated_ids") or [])]:
+                    id_to_canonical_id[key] = canonical_id
+
+        return {id_: id_to_canonical_id.get(id_) for id_ in ids}
 
     def get_orgs(
         self,

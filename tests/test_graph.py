@@ -229,3 +229,40 @@ def test_get_suppliers_by_ids(ids):
     id_to_supplier = graph.get_suppliers_by_ids(ids=ids)
 
     assert set(id_to_supplier.keys()) == set(ids)
+
+
+@pytest.mark.parametrize(
+    "ids,expected_id_to_canonical_id",
+    [
+        ([], {}),
+        (["abc"], {"abc": None}),
+        (
+            [
+                "COZSJWDV39RW",
+                "IC4ALDY84KAX",
+                "IMJ3RXPOZFFK",
+                "INKADXLYWJQC",
+                "TRGC72NRRA4W",
+            ],
+            {
+                "COZSJWDV39RW": "COZSJWDV39RW",
+                "IC4ALDY84KAX": "IC4ALDY84KAX",
+                "IMJ3RXPOZFFK": "IMJ3RXPOZFFK",
+                "INKADXLYWJQC": "INH7OHMZ0R0W",
+                "TRGC72NRRA4W": "TRK8NOFDCUFI",
+            },
+        ),
+    ],
+)
+def test_get_canonical_product_ids(ids, expected_id_to_canonical_id):
+    """Test getting canonical product IDs."""
+
+    graph = GraphAPI(
+        client_id=CLIENT_ID,
+        api_key=API_KEY,
+        default_supplier_schema=SupplierSchemaName.FLAGSHIP,
+    )
+
+    actual_id_to_canonical_id = graph.get_canonical_product_ids(ids=ids)
+
+    assert actual_id_to_canonical_id == expected_id_to_canonical_id
