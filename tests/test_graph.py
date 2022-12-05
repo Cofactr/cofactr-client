@@ -234,6 +234,8 @@ def test_get_suppliers_by_ids(ids):
 @pytest.mark.parametrize(
     "ids,expected_id_to_canonical_id",
     [
+        ([], {}),
+        (["abc"], {"abc": None}),
         (
             [
                 "COZSJWDV39RW",
@@ -249,7 +251,7 @@ def test_get_suppliers_by_ids(ids):
                 "INKADXLYWJQC": "INH7OHMZ0R0W",
                 "TRGC72NRRA4W": "TRK8NOFDCUFI",
             },
-        )
+        ),
     ],
 )
 def test_get_canonical_product_ids(ids, expected_id_to_canonical_id):

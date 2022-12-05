@@ -423,7 +423,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 for key in [canonical_id, *product["deprecated_ids"]]:
                     id_to_canonical_id[key] = canonical_id
 
-        return {id_: id_to_canonical_id[id_] for id_ in ids}
+        return {id_: id_to_canonical_id.get(id_) for id_ in ids}
 
     def get_orgs(
         self,
