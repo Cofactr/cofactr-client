@@ -35,7 +35,6 @@ class ProductSchemaName(str, Enum):
 
 
 schema_to_product: Dict[ProductSchemaName, Callable] = {
-    ProductSchemaName.INTERNAL: identity,
     ProductSchemaName.FLAGSHIP: FlagshipPart,
     ProductSchemaName.FLAGSHIP_V2: FlagshipV2Part,
     ProductSchemaName.FLAGSHIP_V3: FlagshipV3Part,

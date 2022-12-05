@@ -34,7 +34,7 @@ identity = lambda x: x
 
 def parse_entities(ids, entities, entity_dataclass):
     """Parse entities.
-    
+
     Returns:
         Dictionary mapping ID to entity object.
     """
