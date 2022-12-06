@@ -335,9 +335,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[ProductSchemaName] = None,
         timeout: Optional[int] = None,
     ):
-        """Get a batch of products by ids.
+        """Get a batch of products by IDs.
 
-        Note: Multiple requests are made if more than 250 ids are provided.
+        Note: Multiple requests are made if more than 250 IDs are provided.
 
         Args:
             ids: Cofactr product IDs to match on.
@@ -526,11 +526,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[SupplierSchemaName] = None,
         timeout: Optional[int] = None,
     ):
-        """Get a batch of suppliers.
+        """Get a batch of suppliers by IDs.
 
-        Note:
-            A maximum of 500 IDs can be provided. Any more than that, and the server will return
-            a 422 error. Consider breaking the request into batches.
+        Note: Multiple requests are made if more than 250 IDs are provided.
 
         Args:
             ids: Cofactr org IDs to match on.
@@ -538,22 +536,35 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout: Time to wait (in seconds) for the server to issue a response.
         """
 
-        num_requested = len(ids)
-
-        if num_requested > BATCH_LIMIT:
-            raise ValueError(
-                "Too many suppliers requested in one call: Requested"
-                f" {num_requested}, but the limit is {BATCH_LIMIT}."
-            )
+        batch_size = 250
 
         if not schema:
             schema = self.default_supplier_schema
 
-        extracted_suppliers = self.get_suppliers(
-            schema=schema,
-            filtering=[{"field": "id", "operator": "IN", "value": ids}],
-            limit=BATCH_LIMIT,
-            timeout=timeout,
+        batched_suppliers = [
+            self.get_suppliers(
+                schema=schema,
+                filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
+                limit=batch_size,
+                timeout=timeout,
+            )
+            for batched_ids in batched(ids, n=batch_size)
+        ]
+
+        suppliers_data = list(
+            flatten([suppliers["data"] for suppliers in batched_suppliers])
+        )
+
+        extracted_suppliers = (
+            {
+                "data": suppliers_data,
+                "paging": {
+                    "previous": f"/products?limit={len(ids)}&before={suppliers_data[0].id}",
+                    "next": None,
+                },
+            }
+            if suppliers_data
+            else {"data": [], "paging": {}}
         )
 
         id_to_supplier = parse_entities(
