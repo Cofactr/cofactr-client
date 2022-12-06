@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "cofactr"
-version = "5.14.0"
+version = "5.14.1"
 description = "Client library for accessing Cofactr data."
-authors = ["Noah Trueblood <noah@cofactr.com>", "Riley Harrington <riley@cofactr.com>"]
+authors = ["Noah Trueblood <noah@cofactr.com>", "Riley Harrington <riley@cofactr.com>", "Joseph Sayad <joseph@cofactr.com>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/Cofactr/cofactr-client"
@@ -22,6 +22,7 @@ include = [
 python = "^3.10"
 httpx = "^0.23.0"
 more-itertools = "^9.0.0"
+tenacity = "^8.1.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.942"
