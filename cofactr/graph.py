@@ -335,9 +335,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[ProductSchemaName] = None,
         timeout: Optional[int] = None,
     ):
-        """Get a batch of products by ids.
+        """Get a batch of products by IDs.
 
-        Note: Multiple requests are made if more than 250 ids are provided.
+        Note: Multiple requests are made if more than 250 IDs are provided.
 
         Args:
             ids: Cofactr product IDs to match on.
@@ -526,9 +526,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[SupplierSchemaName] = None,
         timeout: Optional[int] = None,
     ):
-        """Get a batch of suppliers by ids.
+        """Get a batch of suppliers by IDs.
 
-        Note: Multiple requests are made if more than 250 ids are provided.
+        Note: Multiple requests are made if more than 250 IDs are provided.
 
         Args:
             ids: Cofactr org IDs to match on.
