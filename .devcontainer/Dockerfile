@@ -4,5 +4,3 @@ FROM mcr.microsoft.com/vscode/devcontainers/python:${VARIANT}
 
 # RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 #     && apt-get -y install --no-install-recommends <package>
-
-RUN curl -sSL https://install.python-poetry.org | python3.10 - --version=1.1.13
