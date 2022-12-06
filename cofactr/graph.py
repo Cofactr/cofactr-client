@@ -177,6 +177,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
     PROTOCOL: Protocol = "https"
     HOST = "graph.cofactr.com"
+    retry_settings = RetrySettings()
 
     def __init__(
         self,
@@ -208,7 +209,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         return res.json()
 
     @retry(
-        reraise=RetrySettings.reraise, stop=RetrySettings.stop, wait=RetrySettings.wait
+        reraise=retry_settings.reraise,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
     )
     def get_products(
         self,
@@ -274,7 +277,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         return extracted_products
 
     @retry(
-        reraise=RetrySettings.reraise, stop=RetrySettings.stop, wait=RetrySettings.wait
+        reraise=retry_settings.reraise,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
     )
     def get_products_by_searches(
         self,
@@ -347,7 +352,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         return query_to_products
 
     @retry(
-        reraise=RetrySettings.reraise, stop=RetrySettings.stop, wait=RetrySettings.wait
+        reraise=retry_settings.reraise,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
     )
     def get_products_by_ids(
         self,
@@ -412,7 +419,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         return id_to_product
 
     @retry(
-        reraise=RetrySettings.reraise, stop=RetrySettings.stop, wait=RetrySettings.wait
+        reraise=retry_settings.reraise,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
     )
     def get_canonical_product_ids(
         self,
@@ -452,7 +461,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         return {id_: id_to_canonical_id.get(id_) for id_ in ids}
 
     @retry(
-        reraise=RetrySettings.reraise, stop=RetrySettings.stop, wait=RetrySettings.wait
+        reraise=retry_settings.reraise,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
     )
     def get_orgs(
         self,
@@ -502,7 +513,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         return res_json
 
     @retry(
-        reraise=RetrySettings.reraise, stop=RetrySettings.stop, wait=RetrySettings.wait
+        reraise=retry_settings.reraise,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
     )
     def get_suppliers(
         self,
@@ -552,7 +565,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         return res_json
 
     @retry(
-        reraise=RetrySettings.reraise, stop=RetrySettings.stop, wait=RetrySettings.wait
+        reraise=retry_settings.reraise,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
     )
     def get_suppliers_by_ids(
         self,
@@ -599,7 +614,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         return id_to_supplier
 
     @retry(
-        reraise=RetrySettings.reraise, stop=RetrySettings.stop, wait=RetrySettings.wait
+        reraise=retry_settings.reraise,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
     )
     def autocomplete_orgs(
         self,
@@ -647,7 +664,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         return res.json()
 
     @retry(
-        reraise=RetrySettings.reraise, stop=RetrySettings.stop, wait=RetrySettings.wait
+        reraise=retry_settings.reraise,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
     )
     def get_product(
         self,
@@ -708,7 +727,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         return res_json
 
     @retry(
-        reraise=RetrySettings.reraise, stop=RetrySettings.stop, wait=RetrySettings.wait
+        reraise=retry_settings.reraise,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
     )
     def get_offers(
         self,
@@ -765,7 +786,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         return res_json
 
     @retry(
-        reraise=RetrySettings.reraise, stop=RetrySettings.stop, wait=RetrySettings.wait
+        reraise=retry_settings.reraise,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
     )
     def get_org(
         self,
@@ -804,7 +827,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         return res_json
 
     @retry(
-        reraise=RetrySettings.reraise, stop=RetrySettings.stop, wait=RetrySettings.wait
+        reraise=retry_settings.reraise,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
     )
     def get_supplier(
         self,
