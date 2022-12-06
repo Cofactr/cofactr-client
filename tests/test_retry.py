@@ -33,7 +33,7 @@ class TestRetry:
         assert succeeds.retry.statistics["attempt_number"] == 1
 
     def test_fails_immediately(self):
-        """Test fail immediately."""
+        """Test fails immediately."""
 
         @retry(
             reraise=self.retry_settings.reraise,
@@ -54,7 +54,7 @@ class TestRetry:
         assert fails.retry.statistics["attempt_number"] == 1
 
     def test_fails_and_then_succeeds(self, mocker):
-        """Test fail and then succeeds."""
+        """Test fails and then succeeds."""
 
         mock = mocker.MagicMock(
             side_effect=[httpx.ConnectTimeout(message="Test"), True]
