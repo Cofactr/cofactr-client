@@ -2,11 +2,20 @@
 # pylint: disable=too-many-arguments
 # Python Modules
 import json
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, NamedTuple, Optional
 
 # 3rd Party Modules
 import httpx
 from more_itertools import batched, flatten
+from tenacity import (
+    retry,
+    retry_any,
+    retry_if_exception_message,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_chain,
+    wait_fixed,
+)
 
 # Local Modules
 from cofactr.helpers import parse_entities
@@ -28,6 +37,21 @@ Protocol = Literal["http", "https"]
 drop_none_values = lambda d: {k: v for k, v in d.items() if v is not None}
 
 BATCH_LIMIT = 500
+
+
+class RetrySettings(NamedTuple):
+    """Retry settings for GraphAPI methods.
+    TODO: Consider extending to other 5xx errors if and when encountered.
+    """
+
+    reraise: bool = True
+    retry: retry_any = (
+        retry_if_exception_type(httpx.ConnectTimeout)
+        | retry_if_exception_type(httpx.ReadTimeout)
+        | retry_if_exception_message(match=r"Server error '502 Bad Gateway'")
+    )
+    stop: stop_after_attempt = stop_after_attempt(3)
+    wait: wait_chain = wait_chain(*[wait_fixed(wait=wait) for wait in [1, 3, 5]])
 
 
 def get_products(
@@ -164,6 +188,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
     PROTOCOL: Protocol = "https"
     HOST = "graph.cofactr.com"
+    retry_settings = RetrySettings()
 
     def __init__(
         self,
@@ -194,6 +219,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return res.json()
 
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def get_products(
         self,
         query: Optional[str] = None,
@@ -257,6 +288,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return extracted_products
 
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def get_products_by_searches(
         self,
         queries: List[str],
@@ -327,6 +364,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return query_to_products
 
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def get_products_by_ids(
         self,
         ids: List[str],
@@ -335,9 +378,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[ProductSchemaName] = None,
         timeout: Optional[int] = None,
     ):
-        """Get a batch of products by ids.
+        """Get a batch of products by IDs.
 
-        Note: Multiple requests are made if more than 250 ids are provided.
+        Note: Multiple requests are made if more than 250 IDs are provided.
 
         Args:
             ids: Cofactr product IDs to match on.
@@ -389,6 +432,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return id_to_product
 
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def get_canonical_product_ids(
         self,
         ids: List[str],
@@ -426,6 +475,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return {id_: id_to_canonical_id.get(id_) for id_ in ids}
 
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def get_orgs(
         self,
         query: Optional[str] = None,
@@ -473,6 +528,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return res_json
 
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def get_suppliers(
         self,
         query: Optional[str] = None,
@@ -520,17 +581,21 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return res_json
 
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def get_suppliers_by_ids(
         self,
         ids: List[str],
         schema: Optional[SupplierSchemaName] = None,
         timeout: Optional[int] = None,
     ):
-        """Get a batch of suppliers.
+        """Get a batch of suppliers by IDs.
 
-        Note:
-            A maximum of 500 IDs can be provided. Any more than that, and the server will return
-            a 422 error. Consider breaking the request into batches.
+        Note: Multiple requests are made if more than 250 IDs are provided.
 
         Args:
             ids: Cofactr org IDs to match on.
@@ -538,22 +603,35 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout: Time to wait (in seconds) for the server to issue a response.
         """
 
-        num_requested = len(ids)
-
-        if num_requested > BATCH_LIMIT:
-            raise ValueError(
-                "Too many suppliers requested in one call: Requested"
-                f" {num_requested}, but the limit is {BATCH_LIMIT}."
-            )
+        batch_size = 250
 
         if not schema:
             schema = self.default_supplier_schema
 
-        extracted_suppliers = self.get_suppliers(
-            schema=schema,
-            filtering=[{"field": "id", "operator": "IN", "value": ids}],
-            limit=BATCH_LIMIT,
-            timeout=timeout,
+        batched_suppliers = [
+            self.get_suppliers(
+                schema=schema,
+                filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
+                limit=batch_size,
+                timeout=timeout,
+            )
+            for batched_ids in batched(ids, n=batch_size)
+        ]
+
+        suppliers_data = list(
+            flatten([suppliers["data"] for suppliers in batched_suppliers])
+        )
+
+        extracted_suppliers = (
+            {
+                "data": suppliers_data,
+                "paging": {
+                    "previous": f"/products?limit={len(ids)}&before={suppliers_data[0].id}",
+                    "next": None,
+                },
+            }
+            if suppliers_data
+            else {"data": [], "paging": {}}
         )
 
         id_to_supplier = parse_entities(
@@ -564,6 +642,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return id_to_supplier
 
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def autocomplete_orgs(
         self,
         query: Optional[str] = None,
@@ -609,6 +693,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return res.json()
 
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def get_product(
         self,
         id: str,
@@ -667,6 +757,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return res_json
 
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def get_offers(
         self,
         product_id: str,
@@ -721,6 +817,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return res_json
 
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def get_org(
         self,
         id: str,
@@ -757,6 +859,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return res_json
 
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def get_supplier(
         self,
         id: str,
