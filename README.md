@@ -11,7 +11,7 @@ from cofactr.graph import GraphAPI
 # Flagship is the default schema.
 from cofactr.schema.flagship.part import Part
 
-graph = GraphAPI()
+graph = GraphAPI(client_id=..., api_key=...)
 
 part_res = graph.get_product(id="IM60640MOX6H")
 part: Part = part_res["data"]
