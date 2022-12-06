@@ -1,5 +1,4 @@
 [tool.poetry]
-[tool.poetry]
 name = "cofactr"
 version = "5.14.1"
 description = "Client library for accessing Cofactr data."
