@@ -182,8 +182,8 @@ def test_get_supplier(org_id):
         (
             "digi",
             [
-                {"id": "622fb450e4c292d8287b0af5", "label": "Digi-Key"},
                 {"id": "622fb450e4c292d8287b0be9", "label": "Digi-Key Marketplace"},
+                {"id": "622fb450e4c292d8287b0af5", "label": "Digi-Key"},
             ],
         )
     ],

@@ -323,23 +323,25 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema = self.default_product_schema
 
         res = httpx.post(
-            f"{self.url}/products/",
+            f"{self.url}/batch/products/",
             headers=drop_none_values(
                 {
                     "X-CLIENT-ID": self.client_id,
                     "X-API-KEY": self.api_key,
                 }
             ),
-            json=[
-                {
-                    "method": "GET",
-                    "relative_url": (
-                        f"?q={query}&schema={schema.value}&external={bool(external)}"
-                        f"&force_refresh={force_refresh}"
-                    ),
-                }
-                for query in queries
-            ],
+            json={
+                "batch": [
+                    {
+                        "method": "GET",
+                        "relative_url": (
+                            f"?q={query}&schema={schema.value}&external={bool(external)}"
+                            f"&force_refresh={force_refresh}"
+                        ),
+                    }
+                    for query in queries
+                ]
+            },
             timeout=timeout,
             follow_redirects=True,
         )
