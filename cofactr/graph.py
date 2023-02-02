@@ -116,7 +116,7 @@ def get_orgs(
     """Get orgs."""
 
     res = httpx.get(
-        f"{url}/orgs",
+        f"{url}/orgs/",
         headers=drop_none_values(
             {
                 "X-CLIENT-ID": client_id,
@@ -157,7 +157,7 @@ def get_suppliers(
     """Get orgs."""
 
     res = httpx.get(
-        f"{url}/orgs/suppliers",
+        f"{url}/orgs/suppliers/",
         headers=drop_none_values(
             {
                 "X-CLIENT-ID": client_id,
