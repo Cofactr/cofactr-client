@@ -119,7 +119,7 @@ def test_get_products_by_ids(ids: List[str]):
     res = graph.get_products_by_ids(
         ids=ids,
         external=False,
-        schema=ProductSchemaName.FLAGSHIP_V3,
+        schema=ProductSchemaName.FLAGSHIP_V4,
     )
 
     assert set(res) == set(ids)
@@ -207,7 +207,7 @@ def test_get_products_by_searches(mpns):
     graph = GraphAPI(
         client_id=CLIENT_ID,
         api_key=API_KEY,
-        default_product_schema=ProductSchemaName.FLAGSHIP_V3,
+        default_product_schema=ProductSchemaName.FLAGSHIP_V4,
     )
 
     mpn_to_products = graph.get_products_by_searches(queries=mpns)
