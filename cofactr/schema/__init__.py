@@ -12,6 +12,7 @@ from cofactr.schema.flagship_v2.part import Part as FlagshipV2Part
 from cofactr.schema.flagship_v3.part import Part as FlagshipV3Part
 from cofactr.schema.flagship_v4.part import Part as FlagshipV4Part
 from cofactr.schema.flagship_cache_v0.part import Part as FlagshipCacheV0Part
+from cofactr.schema.flagship_cache_v1.part import Part as FlagshipCacheV1Part
 from cofactr.schema.logistics.part import Part as LogisticsPart
 from cofactr.schema.logistics_v2.part import Part as LogisticsV2Part
 from cofactr.schema.logistics_v2.offer import Offer as LogisticsV2Offer
@@ -32,6 +33,7 @@ class ProductSchemaName(str, Enum):
     FLAGSHIP_V3 = "flagship-v3"
     FLAGSHIP_V4 = "flagship-v4"
     FLAGSHIP_CACHE_V0 = "flagship-cache-v0"
+    FLAGSHIP_CACHE_V1 = "flagship-cache-v1"
     LOGISTICS = "logistics"
     LOGISTICS_V2 = "logistics-v2"
     LOGISTICS_V3 = "logistics-v3"
@@ -46,6 +48,7 @@ schema_to_product: Dict[ProductSchemaName, Callable] = {
     ProductSchemaName.FLAGSHIP_V3: FlagshipV3Part,
     ProductSchemaName.FLAGSHIP_V4: FlagshipV4Part,
     ProductSchemaName.FLAGSHIP_CACHE_V0: FlagshipCacheV0Part,
+    ProductSchemaName.FLAGSHIP_CACHE_V1: FlagshipCacheV1Part,
     ProductSchemaName.LOGISTICS: LogisticsPart,
     ProductSchemaName.LOGISTICS_V2: LogisticsV2Part,
     ProductSchemaName.LOGISTICS_V3: LogisticsV3Part,

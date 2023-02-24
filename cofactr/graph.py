@@ -414,21 +414,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             flatten([products["data"] for products in batched_products])
         )
 
-        extracted_products = (
-            {
-                "data": products_data,
-                "paging": {
-                    "previous": f"/products?limit={len(ids)}&before={products_data[0].id}",
-                    "next": None,
-                },
-            }
-            if products_data
-            else {"data": [], "paging": {}}
-        )
-
         id_to_product = parse_entities(
             ids=ids,
-            entities=extracted_products["data"],
+            entities=products_data,
             entity_dataclass=schema_to_product[schema],
         )
 
