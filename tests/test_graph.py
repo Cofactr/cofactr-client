@@ -83,35 +83,49 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
 
 
 @pytest.mark.parametrize(
-    "ids",
+    "ids,schema",
     [
-        [],
-        [
-            "CCI8TPV75AW2",
-            "CCEEPYIYIALK",
-            "CCV1F7A8UIYH",
-            "INY4PO7KBQNY",
-            "CCCQSA3G9SMR",
-            "CCVSTE6K2AFU",
-            "RCA8AQY5TJSW",
-            "RC2VSL85Q661",
-            "RCQSO03FR280",
-            "RCXSQXQNTH42",
-            "RCOORAYN6TYZ",
-            "CCGJZ8YO23N9",
-            "CCWA81Z4WGKH",
-            "CCLTDD7R51AD",
-            "CCH6S1HI9CHZ",
-            "CCCFI2O45S02",
-            "COPT8HZW65QI",
-            "COY1W16Z1VWA",
-            "RCU9WS1H4LSD",
-            "RCJYRQIWJNWH",
-            "XX8HGWW7521L",
-        ],
+        ([], ProductSchemaName.FLAGSHIP_V4),
+        (
+            [
+                "CCI8TPV75AW2",
+                "CCEEPYIYIALK",
+                "CCV1F7A8UIYH",
+                "INY4PO7KBQNY",
+                "CCCQSA3G9SMR",
+                "CCVSTE6K2AFU",
+                "RCA8AQY5TJSW",
+                "RC2VSL85Q661",
+                "RCQSO03FR280",
+                "RCXSQXQNTH42",
+                "RCOORAYN6TYZ",
+                "CCGJZ8YO23N9",
+                "CCWA81Z4WGKH",
+                "CCLTDD7R51AD",
+                "CCH6S1HI9CHZ",
+                "CCCFI2O45S02",
+                "COPT8HZW65QI",
+                "COY1W16Z1VWA",
+                "RCU9WS1H4LSD",
+                "RCJYRQIWJNWH",
+                "XX8HGWW7521L",
+            ],
+            ProductSchemaName.FLAGSHIP_V4,
+        ),
+        (
+            [
+                "COZSJWDV39RW",
+                "IC4ALDY84KAX",
+                "IMJ3RXPOZFFK",
+                "INKADXLYWJQC",
+                "INKADXLYWJQC",
+                "TRGC72NRRA4W",
+            ],
+            ProductSchemaName.FLAGSHIP_CACHE_V1,
+        ),
     ],
 )
-def test_get_products_by_ids(ids: List[str]):
+def test_get_products_by_ids(ids: List[str], schema: ProductSchemaName):
     """Test getting parts in bulk by their IDs."""
 
     graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
@@ -119,7 +133,7 @@ def test_get_products_by_ids(ids: List[str]):
     res = graph.get_products_by_ids(
         ids=ids,
         external=False,
-        schema=ProductSchemaName.FLAGSHIP_V4,
+        schema=schema,
     )
 
     assert set(res) == set(ids)
