@@ -8,6 +8,7 @@ from cofactr.helpers import identity
 from cofactr.schema.flagship.offer import Offer as FlagshipOffer
 from cofactr.schema.logistics.offer import Offer as LogisticsOffer
 from cofactr.schema.flagship.part import Part as FlagshipPart
+from cofactr.schema.flagship_v2.offer import Offer as FlagshipV2Offer
 from cofactr.schema.flagship_v2.part import Part as FlagshipV2Part
 from cofactr.schema.flagship_v3.part import Part as FlagshipV3Part
 from cofactr.schema.flagship_v4.part import Part as FlagshipV4Part
@@ -22,6 +23,7 @@ from cofactr.schema.logistics_v4.part import Part as LogisticsV4Part
 from cofactr.schema.flagship.seller import Seller as FlagshipSeller
 from cofactr.schema.price_solver_v0.part import Part as PriceSolverV0Part
 from cofactr.schema.price_solver_v1.part import Part as PriceSolverV1Part
+from cofactr.schema.price_solver_v2.part import Part as PriceSolverV2Part
 
 
 class ProductSchemaName(str, Enum):
@@ -40,6 +42,7 @@ class ProductSchemaName(str, Enum):
     LOGISTICS_V4 = "logistics-v4"
     PRICE_SOLVER_V0 = "price-solver-v0"
     PRICE_SOLVER_V1 = "price-solver-v1"
+    PRICE_SOLVER_V2 = "price-solver-v2"
 
 
 schema_to_product: Dict[ProductSchemaName, Callable] = {
@@ -55,6 +58,7 @@ schema_to_product: Dict[ProductSchemaName, Callable] = {
     ProductSchemaName.LOGISTICS_V4: LogisticsV4Part,
     ProductSchemaName.PRICE_SOLVER_V0: PriceSolverV0Part,
     ProductSchemaName.PRICE_SOLVER_V1: PriceSolverV1Part,
+    ProductSchemaName.PRICE_SOLVER_V2: PriceSolverV2Part,
 }
 
 
@@ -63,6 +67,7 @@ class OfferSchemaName(str, Enum):
 
     INTERNAL = "internal"
     FLAGSHIP = "flagship"
+    FLAGSHIP_V2 = "flagship-v2"
     LOGISTICS = "logistics"
     LOGISTICS_V2 = "logistics-v2"
 
@@ -70,6 +75,7 @@ class OfferSchemaName(str, Enum):
 schema_to_offer: Dict[OfferSchemaName, Callable] = {
     OfferSchemaName.INTERNAL: identity,
     OfferSchemaName.FLAGSHIP: FlagshipOffer,
+    OfferSchemaName.FLAGSHIP_V2: FlagshipV2Offer,
     OfferSchemaName.LOGISTICS: LogisticsOffer,
     OfferSchemaName.LOGISTICS_V2: LogisticsV2Offer,
 }
