@@ -9,7 +9,7 @@ from cofactr.schema.flagship_v4.part import Part as FlagshipV4Part
 
 
 @dataclass
-class Part(FlagshipV4Part):  # pylint: disable=too-many-instance-attributes
+class Part(FlagshipV4Part):
     """Part."""
 
     offers: List[FlagshipV2Offer]

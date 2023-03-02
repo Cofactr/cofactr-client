@@ -9,7 +9,7 @@ from cofactr.schema.types import OfferCorrection
 
 
 @dataclass
-class Offer(FlagshipOffer):  # pylint: disable=too-many-instance-attributes
+class Offer(FlagshipOffer):
     """Part offer."""
 
     corrections: Dict[str, OfferCorrection]

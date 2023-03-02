@@ -3,7 +3,7 @@
 from typing import Any, Literal, Optional, TypedDict
 
 
-class OfferCorrection(TypedDict):  # pylint: disable=too-few-public-methods
+class OfferCorrection(TypedDict):
     """Offer correction."""
 
     correct_value: Any
