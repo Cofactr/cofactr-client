@@ -1,6 +1,15 @@
 """Types for use in schema definitions."""
 # Standard Modules
-from typing import Literal, TypedDict
+from typing import Any, Literal, Optional, TypedDict
+
+
+class OfferCorrection(TypedDict):
+    """Offer correction."""
+
+    correct_value: Any
+    original_value: Any
+    detail: Optional[str]
+    created_at: str
 
 
 class Document(TypedDict):

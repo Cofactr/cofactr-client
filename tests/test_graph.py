@@ -123,6 +123,13 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
             ],
             ProductSchemaName.FLAGSHIP_CACHE_V1,
         ),
+        (
+            [
+                "XXNGAHF7HD8S",
+                "TRCAHGIXODI7",
+            ],
+            ProductSchemaName.PRICE_SOLVER_V2,
+        ),
     ],
 )
 def test_get_products_by_ids(ids: List[str], schema: ProductSchemaName):
@@ -151,7 +158,7 @@ def test_get_offers(cpid: str):
     flagship_res = graph.get_offers(
         product_id=cpid,
         external=False,
-        schema=OfferSchemaName.FLAGSHIP,
+        schema=OfferSchemaName.FLAGSHIP_V2,
     )
 
     assert flagship_res
