@@ -145,9 +145,6 @@ def test_get_products_by_ids(ids: List[str], schema: ProductSchemaName):
 
     assert set(res) == set(ids)
 
-    if schema == ProductSchemaName.PRICE_SOLVER_V2:
-        print(res)
-
 
 @pytest.mark.parametrize(
     "cpid",
