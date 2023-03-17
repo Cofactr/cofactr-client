@@ -3,6 +3,7 @@
 # Python Modules
 import json
 from typing import Any, Dict, List, Literal, NamedTuple, Optional
+from urllib.parse import quote
 
 # 3rd Party Modules
 import httpx
@@ -29,7 +30,7 @@ from cofactr.schema import (
     schema_to_product,
     schema_to_supplier,
 )
-from cofactr.schema.types import Completion
+from cofactr.schema.types import Completion, PartInV0
 
 Protocol = Literal["http", "https"]
 
@@ -68,6 +69,7 @@ def get_products(
     schema,
     filtering,
     timeout: Optional[int] = None,
+    owner_id: Optional[str] = None,
 ) -> httpx.Response:
     """Get products."""
 
@@ -81,6 +83,7 @@ def get_products(
         ),
         params=drop_none_values(
             {
+                "owner_id": owner_id,
                 "q": query,
                 "fields": fields,
                 "before": before,
@@ -112,6 +115,7 @@ def get_orgs(
     schema,
     timeout,
     filtering,
+    owner_id,
 ) -> httpx.Response:
     """Get orgs."""
 
@@ -125,6 +129,7 @@ def get_orgs(
         ),
         params=drop_none_values(
             {
+                "owner_id": owner_id,
                 "q": query,
                 "before": before,
                 "after": after,
@@ -153,6 +158,7 @@ def get_suppliers(
     schema,
     timeout,
     filtering,
+    owner_id,
 ) -> httpx.Response:
     """Get orgs."""
 
@@ -166,6 +172,7 @@ def get_suppliers(
         ),
         params=drop_none_values(
             {
+                "owner_id": owner_id,
                 "q": query,
                 "before": before,
                 "after": after,
@@ -237,6 +244,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[ProductSchemaName] = None,
         filtering: Optional[List[Dict]] = None,
         timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
     ):
         """Get products.
 
@@ -274,6 +282,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema=schema.value,
             filtering=filtering,
             timeout=timeout,
+            owner_id=owner_id,
         )
 
         extracted_products = res.json()
@@ -301,6 +310,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
         timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
     ):
         """Search for products associated with each query.
 
@@ -322,6 +332,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_product_schema
 
+        client_id_param = f"&client_id={quote(owner_id)}" if owner_id else ""
+
         res = httpx.post(
             f"{self.url}/batch/products/",
             headers=drop_none_values(
@@ -335,8 +347,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     {
                         "method": "GET",
                         "relative_url": (
-                            f"?q={query}&schema={schema.value}&external={bool(external)}"
-                            f"&force_refresh={force_refresh}"
+                            f"?q={quote(query)}&schema={schema.value}&external={bool(external)}"
+                            f"{client_id_param}&force_refresh={force_refresh}"
                         ),
                     }
                     for query in queries
@@ -379,6 +391,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
         timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
     ):
         """Get a batch of products by IDs.
 
@@ -406,6 +419,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
                 limit=batch_size,
                 timeout=timeout,
+                owner_id=owner_id,
             )
             for batched_ids in batched(ids, n=batch_size)
         ]
@@ -432,6 +446,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         self,
         ids: List[str],
         timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
     ):
         """Get the canonical product ID for each of the given IDs, which may or may not be
         deprecated.
@@ -448,6 +463,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
                 limit=batch_size,
                 timeout=timeout,
+                owner_id=owner_id,
             )
             for batched_ids in batched(ids, n=batch_size)
         ]
@@ -480,6 +496,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[OrgSchemaName] = None,
         timeout: Optional[int] = None,
         filtering: Optional[List[Dict]] = None,
+        owner_id: Optional[str] = None,
     ):
         """Get organizations.
 
@@ -508,6 +525,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema=schema.value,
             timeout=timeout,
             filtering=filtering,
+            owner_id=owner_id,
         )
 
         res_json = res.json()
@@ -533,6 +551,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[SupplierSchemaName] = None,
         timeout: Optional[int] = None,
         filtering: Optional[List[Dict]] = None,
+        owner_id: Optional[str] = None,
     ):
         """Get suppliers.
 
@@ -561,6 +580,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema=schema.value,
             timeout=timeout,
             filtering=filtering,
+            owner_id=owner_id,
         )
 
         res_json = res.json()
@@ -582,6 +602,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         ids: List[str],
         schema: Optional[SupplierSchemaName] = None,
         timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
     ):
         """Get a batch of suppliers by IDs.
 
@@ -604,6 +625,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
                 limit=batch_size,
                 timeout=timeout,
+                owner_id=owner_id,
             )
             for batched_ids in batched(ids, n=batch_size)
         ]
@@ -612,21 +634,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             flatten([suppliers["data"] for suppliers in batched_suppliers])
         )
 
-        extracted_suppliers = (
-            {
-                "data": suppliers_data,
-                "paging": {
-                    "previous": f"/products?limit={len(ids)}&before={suppliers_data[0].id}",
-                    "next": None,
-                },
-            }
-            if suppliers_data
-            else {"data": [], "paging": {}}
-        )
-
         id_to_supplier = parse_entities(
             ids=ids,
-            entities=extracted_suppliers["data"],
+            entities=suppliers_data,
             entity_dataclass=schema_to_supplier[schema],
         )
 
@@ -644,6 +654,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         limit: Optional[int] = None,
         types: Optional[str] = None,
         timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
     ) -> Dict[Literal["data"], Completion]:
         """Autocomplete organizations.
 
@@ -670,6 +681,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             ),
             params=drop_none_values(
                 {
+                    "owner_id": owner_id,
                     "q": query,
                     "limit": limit,
                     "types": types,
@@ -697,6 +709,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         force_refresh: bool = False,
         schema: Optional[ProductSchemaName] = None,
         timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
     ):
         """Get product.
 
@@ -725,12 +738,65 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             ),
             params=drop_none_values(
                 {
+                    "owner_id": owner_id,
                     "fields": fields,
                     "external": external,
                     "force_refresh": force_refresh,
                     "schema": schema.value,
                 }
             ),
+            timeout=timeout,
+            follow_redirects=True,
+        )
+
+        res.raise_for_status()
+
+        res_json = res.json()
+
+        Product = schema_to_product[schema]  # pylint: disable=invalid-name
+
+        res_json["data"] = (
+            Product(**res_json["data"]) if (res_json and res_json.get("data")) else None
+        )
+
+        return res_json
+
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
+    def create_product(
+        self,
+        data: PartInV0,
+        schema: Optional[ProductSchemaName] = None,
+        timeout: Optional[int] = None,
+    ):
+        """Create product.
+
+        Args:
+            data: Data defining the product to create.
+            schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+
+        Returns:
+            The newly created product, represented in the given schema.
+        """
+
+        if not schema:
+            schema = self.default_product_schema
+
+        res = httpx.post(
+            f"{self.url}/products/",
+            json=data,
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            params=drop_none_values({"schema": schema.value}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -761,6 +827,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         force_refresh: bool = False,
         schema: Optional[OfferSchemaName] = None,
         timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
     ):
         """Get product.
 
@@ -772,6 +839,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 `external`.
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Specifies which private data to access.
         """
 
         if not schema:
@@ -787,6 +855,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             ),
             params=drop_none_values(
                 {
+                    "owner_id": owner_id,
                     "fields": fields,
                     "external": external,
                     "force_refresh": force_refresh,
@@ -818,6 +887,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         id: str,
         schema: Optional[OrgSchemaName] = None,
         timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
     ):
         """Get organization."""
 
@@ -832,7 +902,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
-            params=drop_none_values({"schema": schema.value}),
+            params=drop_none_values({"owner_id": owner_id, "schema": schema.value}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -860,6 +930,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         id: str,
         schema: Optional[SupplierSchemaName] = None,
         timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
     ):
         """Get supplier."""
 
@@ -874,7 +945,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
-            params=drop_none_values({"schema": schema.value}),
+            params=drop_none_values({"owner_id": owner_id, "schema": schema.value}),
             timeout=timeout,
             follow_redirects=True,
         )

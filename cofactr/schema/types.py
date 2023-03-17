@@ -1,6 +1,7 @@
 """Types for use in schema definitions."""
 # Standard Modules
-from typing import Any, Literal, Optional, TypedDict
+from typing import Any, List, Literal, Optional, TypedDict
+from typing_extensions import NotRequired
 
 
 class OfferCorrection(TypedDict):
@@ -36,3 +37,37 @@ TerminationType = Literal[
     "hybrid of pressed fit and SMT",
     "hybrid of pressed fit and THT",
 ]
+
+
+class ManufacturerInV0(TypedDict):
+    """Manufacturer input."""
+
+    custom_label: NotRequired[Optional[str]]
+    custom_id: NotRequired[Optional[str]]
+    id: NotRequired[Optional[str]]
+
+
+class ClassificationInV0(TypedDict):
+    """Classification input."""
+
+    custom_label: NotRequired[Optional[str]]
+    custom_id: NotRequired[Optional[str]]
+    id: NotRequired[Optional[str]]
+
+
+class PartInV0(TypedDict):
+    """Part input."""
+
+    owner_id: str
+
+    mpn: str
+    alt_mpns: NotRequired[Optional[List[str]]]
+    custom_id: NotRequired[Optional[str]]
+    mfr: NotRequired[Optional[ManufacturerInV0]]
+
+    classification: NotRequired[Optional[ClassificationInV0]]
+    description: NotRequired[Optional[str]]
+    msl: NotRequired[Optional[str]]
+    package: NotRequired[Optional[str]]
+    terminations: NotRequired[Optional[int]]
+    termination_type: NotRequired[Optional[TerminationType]]
