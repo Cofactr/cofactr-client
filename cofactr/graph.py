@@ -701,6 +701,55 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         stop=retry_settings.stop,
         wait=retry_settings.wait,
     )
+    def autocomplete_classifications(
+        self,
+        query: Optional[str] = None,
+        limit: Optional[int] = None,
+        types: Optional[str] = None,
+        timeout: Optional[int] = None,
+    ) -> Dict[Literal["data"], Completion]:
+        """Autocomplete classifications.
+
+        Args:
+            query: Search query.
+            before: Upper page boundry, expressed as a product ID.
+            after: Lower page boundry, expressed as a product ID.
+            limit: Restrict the results of the query to a particular number of
+                documents.
+            types: Filter for types of organizations.
+                Example: "part_classification" filters to part classification classes.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+        """
+
+        res = httpx.get(
+            f"{self.url}/classes/autocompletions",
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            params=drop_none_values(
+                {
+                    "q": query,
+                    "limit": limit,
+                    "types": types,
+                }
+            ),
+            timeout=timeout,
+            follow_redirects=True,
+        )
+
+        res.raise_for_status()
+
+        return res.json()
+
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
     def get_product(
         self,
         id: str,
