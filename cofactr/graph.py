@@ -672,7 +672,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         """
 
         res = httpx.get(
-            f"{self.url}/orgs/autocomplete",
+            f"{self.url}/orgs/autocompletions/",
             headers=drop_none_values(
                 {
                     "X-CLIENT-ID": self.client_id,
@@ -722,7 +722,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         """
 
         res = httpx.get(
-            f"{self.url}/classes/autocompletions",
+            f"{self.url}/classes/autocompletions/",
             headers=drop_none_values(
                 {
                     "X-CLIENT-ID": self.client_id,
