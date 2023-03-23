@@ -13,3 +13,9 @@ class Part(FlagshipV5Part):
     """Part."""
 
     offers: List[FlagshipV2Offer]
+
+    def __post_init__(self):
+        """Post initialization."""
+
+        self.mfg = self.mfr
+        self.offers = [FlagshipV2Offer(**offer) for offer in self.offers]
