@@ -245,7 +245,7 @@ def test_autocomplete_classifications(query, expected_completions):
 
     graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
-    res = graph.autocomplete_classifications(query=query, types="supplier")
+    res = graph.autocomplete_classifications(query=query, types="part_classification")
 
     completions = res["data"]
 
