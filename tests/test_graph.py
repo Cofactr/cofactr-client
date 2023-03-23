@@ -221,6 +221,37 @@ def test_autocomplete_orgs(query, expected_completions):
     assert completions == expected_completions
 
 
+@pytest.mark.parametrize(
+    "query,expected_completions",
+    [
+        (
+            "Solar Cell",
+            [
+                {"id": "solar_cells", "label": "solar cells"},
+            ],
+        ),
+        (
+            "sol",
+            [
+                {"id": "solid_state_relays", "label": "solid state relays"},
+                {"id": "solar_cells", "label": "solar cells"},
+                {"id": "solenoids", "label": "solenoids"},
+            ],
+        ),
+    ],
+)
+def test_autocomplete_classifications(query, expected_completions):
+    """Test autocompleting classifications."""
+
+    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
+
+    res = graph.autocomplete_classifications(query=query, types="part_classification")
+
+    completions = res["data"]
+
+    assert completions == expected_completions
+
+
 @pytest.mark.parametrize("mpns", [["2N7002LT1G", "CC0603JRNPOABN100"]])
 def test_get_products_by_searches(mpns):
     """Test executing a batch of product searches."""

@@ -263,6 +263,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             filtering: Filter products.
                 Example: `[{"field":"id","operator":"IN","value":["CCCQSA3G9SMR","CCV1F7A8UIYH"]}]`.
             timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Specifies which private data to access.
         """
 
         if not schema:
@@ -321,6 +322,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 `external`.
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Specifies which private data to access.
 
         Returns:
             A dictionary mapping each MPN to a list of matching products.
@@ -404,6 +406,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 `external`.
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Specifies which private data to access.
         """
 
         batch_size = 250
@@ -509,6 +512,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout: Time to wait (in seconds) for the server to issue a response.
             filtering: Filter orgs.
                 Example: `[{"field":"id","operator":"IN","value":["622fb450e4c292d8287b0af5"]}]`.
+            owner_id: Specifies which private data to access.
         """
 
         if not schema:
@@ -564,6 +568,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout: Time to wait (in seconds) for the server to issue a response.
             filtering: Filter suppliers.
                 Example: `[{"field":"id","operator":"IN","value":["622fb450e4c292d8287b0af5"]}]`.
+            owner_id: Specifies which private data to access.
         """
 
         if not schema:
@@ -612,6 +617,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             ids: Cofactr org IDs to match on.
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Specifies which private data to access.
         """
 
         batch_size = 250
@@ -669,10 +675,63 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 Example: "supplier|manufacturer" filters to orgs that are a
                     supplier or a manufacturer.
             timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Specifies which private data to access.
         """
 
         res = httpx.get(
-            f"{self.url}/orgs/autocomplete",
+            f"{self.url}/orgs/autocompletions/",
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            params=drop_none_values(
+                {
+                    "owner_id": owner_id,
+                    "q": query,
+                    "limit": limit,
+                    "types": types,
+                }
+            ),
+            timeout=timeout,
+            follow_redirects=True,
+        )
+
+        res.raise_for_status()
+
+        return res.json()
+
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
+    def autocomplete_classifications(
+        self,
+        query: Optional[str] = None,
+        limit: Optional[int] = None,
+        types: Optional[str] = None,
+        timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
+    ) -> Dict[Literal["data"], Completion]:
+        """Autocomplete classifications.
+
+        Args:
+            query: Search query.
+            before: Upper page boundry, expressed as a product ID.
+            after: Lower page boundry, expressed as a product ID.
+            limit: Restrict the results of the query to a particular number of
+                documents.
+            types: Filter for types of organizations.
+                Example: "part_classification" filters to part classification classes.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Specifies which private data to access.
+        """
+
+        res = httpx.get(
+            f"{self.url}/classes/autocompletions/",
             headers=drop_none_values(
                 {
                     "X-CLIENT-ID": self.client_id,
@@ -723,6 +782,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 `external`.
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Specifies which private data to access.
         """
 
         if not schema:
