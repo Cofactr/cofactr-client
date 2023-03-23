@@ -41,7 +41,6 @@ class ProductSchemaName(str, Enum):
     FLAGSHIP_CACHE_V0 = "flagship-cache-v0"
     FLAGSHIP_CACHE_V1 = "flagship-cache-v1"
     FLAGSHIP_CACHE_V2 = "flagship-cache-v2"
-    FLAGSHIP_CACHE_V3 = "flagship-cache-v3"
     LOGISTICS = "logistics"
     LOGISTICS_V2 = "logistics-v2"
     LOGISTICS_V3 = "logistics-v3"
