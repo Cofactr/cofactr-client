@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 # Local Modules
-from cofactr.schema.flagship_cache_v0.part import Part as FlagshipCacheV1Part
+from cofactr.schema.flagship_cache_v1.part import Part as FlagshipCacheV1Part
 
 
 @dataclass
