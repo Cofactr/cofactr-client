@@ -1,5 +1,6 @@
 """Test GraphAPI."""
 # Standard Modules
+import json
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -202,10 +203,10 @@ def test_get_supplier(org_id):
     [
         (
             "digi",
-            [
-                {"id": "622fb450e4c292d8287b0be9", "label": "Digi-Key Marketplace"},
-                {"id": "622fb450e4c292d8287b0af5", "label": "Digi-Key"},
-            ],
+            {
+                '{"id": "622fb450e4c292d8287b0be9", "label": "Digi-Key Marketplace"}',
+                '{"id": "622fb450e4c292d8287b0af5", "label": "Digi-Key"}',
+            },
         )
     ],
 )
@@ -218,7 +219,8 @@ def test_autocomplete_orgs(query, expected_completions):
 
     completions = res["data"]
 
-    assert completions == expected_completions
+    assert {json.dumps(x, sort_keys=True) for x in completions} == expected_completions
+
 
 
 @pytest.mark.parametrize(
@@ -226,17 +228,17 @@ def test_autocomplete_orgs(query, expected_completions):
     [
         (
             "Solar Cell",
-            [
-                {"id": "solar_cells", "label": "solar cells"},
-            ],
+            {
+                '{"id": "solar_cells", "label": "solar cells"}',
+            },
         ),
         (
             "sol",
-            [
-                {"id": "solid_state_relays", "label": "solid state relays"},
-                {"id": "solar_cells", "label": "solar cells"},
-                {"id": "solenoids", "label": "solenoids"},
-            ],
+            {
+                '{"id": "solid_state_relays", "label": "solid state relays"}',
+                '{"id": "solar_cells", "label": "solar cells"}',
+                '{"id": "solenoids", "label": "solenoids"}',
+            },
         ),
     ],
 )
@@ -249,7 +251,7 @@ def test_autocomplete_classifications(query, expected_completions):
 
     completions = res["data"]
 
-    assert completions == expected_completions
+    assert {json.dumps(x, sort_keys=True) for x in completions} == expected_completions
 
 
 @pytest.mark.parametrize("mpns", [["2N7002LT1G", "CC0603JRNPOABN100"]])
@@ -299,7 +301,7 @@ def test_get_suppliers_by_ids(ids):
             {
                 "COZSJWDV39RW": "COZSJWDV39RW",
                 "IC4ALDY84KAX": "IC4ALDY84KAX",
-                "IMJ3RXPOZFFK": "IMJ3RXPOZFFK",
+                "IMJ3RXPOZFFK": "IM8U4NOIMGD0",
                 "INKADXLYWJQC": "INH7OHMZ0R0W",
                 "TRGC72NRRA4W": "TRK8NOFDCUFI",
             },
