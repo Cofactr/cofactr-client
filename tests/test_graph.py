@@ -9,7 +9,7 @@ from dotenv import dotenv_values
 import pytest
 
 # Local Modules
-from cofactr.graph import GraphAPI
+from cofactr.graph import GraphAPI, SearchStrategy
 from cofactr.schema import (
     OfferSchemaName,
     ProductSchemaName,
@@ -264,7 +264,7 @@ def test_get_products_by_searches(mpns):
         default_product_schema=ProductSchemaName.FLAGSHIP_V4,
     )
 
-    mpn_to_products = graph.get_products_by_searches(queries=mpns)
+    mpn_to_products = graph.get_products_by_searches(queries=mpns, search_strategy=SearchStrategy.MPN_SKU_MFR)
 
     assert mpn_to_products["2N7002LT1G"]
     assert mpn_to_products["CC0603JRNPOABN100"]

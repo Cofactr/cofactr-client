@@ -1,6 +1,7 @@
 """Cofactr graph API client."""
 # pylint: disable=too-many-arguments
 # Python Modules
+from enum import Enum
 import json
 from typing import Any, Dict, List, Literal, NamedTuple, Optional
 from urllib.parse import quote
@@ -33,6 +34,12 @@ from cofactr.schema import (
 from cofactr.schema.types import Completion, PartInV0
 
 Protocol = Literal["http", "https"]
+
+class SearchStrategy(str, Enum):
+    """Search strategy."""
+
+    DEFAULT = "default"
+    MPN_SKU_MFR = "mpn_sku_mfr"
 
 
 drop_none_values = lambda d: {k: v for k, v in d.items() if v is not None}
@@ -68,6 +75,7 @@ def get_products(
     force_refresh,
     schema,
     filtering,
+    search_strategy: SearchStrategy,
     timeout: Optional[int] = None,
     owner_id: Optional[str] = None,
 ) -> httpx.Response:
@@ -93,6 +101,7 @@ def get_products(
                 "force_refresh": force_refresh,
                 "schema": schema,
                 "filtering": json.dumps(filtering) if filtering else None,
+                "search_strategy": search_strategy.value,
             }
         ),
         timeout=timeout,
@@ -245,6 +254,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         filtering: Optional[List[Dict]] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
+        search_strategy: SearchStrategy = SearchStrategy.DEFAULT,
     ):
         """Get products.
 
@@ -264,6 +274,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 Example: `[{"field":"id","operator":"IN","value":["CCCQSA3G9SMR","CCV1F7A8UIYH"]}]`.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
+            search_strategy: TODO
         """
 
         if not schema:
@@ -282,6 +293,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             limit=limit,
             schema=schema.value,
             filtering=filtering,
+            search_strategy=search_strategy,
             timeout=timeout,
             owner_id=owner_id,
         )
@@ -312,6 +324,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[ProductSchemaName] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
+        search_strategy: SearchStrategy = SearchStrategy.DEFAULT,
     ):
         """Search for products associated with each query.
 
@@ -323,6 +336,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
+            search_strategy: TODO
 
         Returns:
             A dictionary mapping each MPN to a list of matching products.
@@ -350,7 +364,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                         "method": "GET",
                         "relative_url": (
                             f"?q={quote(query)}&schema={schema.value}&external={bool(external)}"
-                            f"{client_id_param}&force_refresh={force_refresh}"
+                            f"{client_id_param}&force_refresh={force_refresh}&search_strategy={search_strategy.value}"
                         ),
                     }
                     for query in queries
