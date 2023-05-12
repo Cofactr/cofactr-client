@@ -261,7 +261,7 @@ def test_get_products_by_searches(mpns):
     graph = GraphAPI(
         client_id=CLIENT_ID,
         api_key=API_KEY,
-        default_product_schema=ProductSchemaName.FLAGSHIP_V4,
+        default_product_schema=ProductSchemaName.FLAGSHIP_V6,
     )
 
     mpn_to_products = graph.get_products_by_searches(queries=mpns, search_strategy=SearchStrategy.MPN_SKU_MFR)
