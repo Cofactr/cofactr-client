@@ -887,6 +887,46 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         return res_json
 
+
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
+    def set_custom_product_id(
+        self,
+        product_id: str,
+        custom_id: Optional[str] = None,
+        deprecated_custom_ids: Optional[str] = None,
+        timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
+    ):
+        """Set custom product ID."""
+
+        res = httpx.post(
+            f"{self.url}/actions/custom-product-id-updates/",
+            json=drop_none_values(
+                {
+                    "id": product_id,
+                    "owner_id": owner_id,
+                    "custom_id": custom_id,
+                    "deprecated_custom_ids": deprecated_custom_ids,
+                }
+            ),
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            timeout=timeout,
+            follow_redirects=True,
+        )
+
+        res.raise_for_status()
+
+
     @retry(
         reraise=retry_settings.reraise,
         retry=retry_settings.retry,
