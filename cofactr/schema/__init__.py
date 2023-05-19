@@ -29,6 +29,7 @@ from cofactr.schema.price_solver_v0.part import Part as PriceSolverV0Part
 from cofactr.schema.price_solver_v1.part import Part as PriceSolverV1Part
 from cofactr.schema.price_solver_v2.part import Part as PriceSolverV2Part
 from cofactr.schema.price_solver_v3.part import Part as PriceSolverV3Part
+from cofactr.schema.price_solver_v4.part import Part as PriceSolverV4Part
 
 
 class ProductSchemaName(str, Enum):
@@ -53,6 +54,7 @@ class ProductSchemaName(str, Enum):
     PRICE_SOLVER_V1 = "price-solver-v1"
     PRICE_SOLVER_V2 = "price-solver-v2"
     PRICE_SOLVER_V3 = "price-solver-v3"
+    PRICE_SOLVER_V4 = "price-solver-v4"
 
 
 schema_to_product: Dict[ProductSchemaName, Callable] = {
@@ -74,6 +76,7 @@ schema_to_product: Dict[ProductSchemaName, Callable] = {
     ProductSchemaName.PRICE_SOLVER_V1: PriceSolverV1Part,
     ProductSchemaName.PRICE_SOLVER_V2: PriceSolverV2Part,
     ProductSchemaName.PRICE_SOLVER_V3: PriceSolverV3Part,
+    ProductSchemaName.PRICE_SOLVER_V4: PriceSolverV4Part,
 }
 
 
