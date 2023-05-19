@@ -71,3 +71,20 @@ class PartInV0(TypedDict):
     package: NotRequired[Optional[str]]
     terminations: NotRequired[Optional[int]]
     termination_type: NotRequired[Optional[TerminationType]]
+
+class PartialPartInV0(TypedDict):
+    """Partial part input."""
+
+    owner_id: str
+
+    mpn: NotRequired[Optional[List[str]]]
+    alt_mpns: NotRequired[Optional[List[str]]]
+    custom_id: NotRequired[Optional[str]]
+    mfr: NotRequired[Optional[ManufacturerInV0]]
+
+    classification: NotRequired[Optional[ClassificationInV0]]
+    description: NotRequired[Optional[str]]
+    msl: NotRequired[Optional[str]]
+    package: NotRequired[Optional[str]]
+    terminations: NotRequired[Optional[int]]
+    termination_type: NotRequired[Optional[TerminationType]]

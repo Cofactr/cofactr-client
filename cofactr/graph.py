@@ -31,7 +31,7 @@ from cofactr.schema import (
     schema_to_product,
     schema_to_supplier,
 )
-from cofactr.schema.types import Completion, PartInV0
+from cofactr.schema.types import Completion, PartInV0, PartialPartInV0
 
 Protocol = Literal["http", "https"]
 
@@ -886,6 +886,46 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         )
 
         return res_json
+
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
+    def update_product(
+        self,
+        product_id: str,
+        data: PartialPartInV0,
+        timeout: Optional[int] = None,
+    ):
+        """Update product.
+
+        Args:
+            product_id: Cofactr ID of product to update.
+            data: Data defining product updates.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+        """
+
+        res = httpx.patch(
+            f"{self.url}/products/{product_id}",
+            json={
+                "owner_id": data["owner_id"],
+                "schema": "flagship",
+                "data": data,
+            },
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            timeout=timeout,
+            follow_redirects=True,
+        )
+
+        res.raise_for_status()
+
 
     @retry(
         reraise=retry_settings.reraise,
