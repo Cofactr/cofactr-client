@@ -76,6 +76,7 @@ def get_products(
     schema,
     filtering,
     search_strategy: SearchStrategy,
+    stale_delta: Optional[str],
     timeout: Optional[int] = None,
     owner_id: Optional[str] = None,
 ) -> httpx.Response:
@@ -102,6 +103,7 @@ def get_products(
                 "schema": schema,
                 "filtering": json.dumps(filtering) if filtering else None,
                 "search_strategy": search_strategy.value,
+                "stale_delta": stale_delta,
             }
         ),
         timeout=timeout,
@@ -255,6 +257,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
         search_strategy: SearchStrategy = SearchStrategy.DEFAULT,
+        stale_delta: Optional[str] = None,
     ):
         """Get products.
 
@@ -274,7 +277,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 Example: `[{"field":"id","operator":"IN","value":["CCCQSA3G9SMR","CCV1F7A8UIYH"]}]`.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
-            search_strategy: TODO
+            search_strategy: Search strategy used to find products.
+            stale_delta: How much time has to pass before data is treated as stale.
+                Examples: "5h", "1d", "1w"
         """
 
         if not schema:
@@ -294,6 +299,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema=schema.value,
             filtering=filtering,
             search_strategy=search_strategy,
+            stale_delta=stale_delta,
             timeout=timeout,
             owner_id=owner_id,
         )
@@ -325,6 +331,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
         search_strategy: SearchStrategy = SearchStrategy.DEFAULT,
+        stale_delta: Optional[str] = None,
     ):
         """Search for products associated with each query.
 
@@ -336,7 +343,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
-            search_strategy: TODO
+            search_strategy: Search strategy used to find products.
+            stale_delta: How much time has to pass before data is treated as stale.
+                Examples: "5h", "1d", "1w"
 
         Returns:
             A dictionary mapping each MPN to a list of matching products.
@@ -349,6 +358,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema = self.default_product_schema
 
         client_id_param = f"&client_id={quote(owner_id)}" if owner_id else ""
+        stale_delta_param = f"&stale_delta={stale_delta}" if stale_delta else ""
 
         res = httpx.post(
             f"{self.url}/batch/products/",
@@ -364,7 +374,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                         "method": "GET",
                         "relative_url": (
                             f"?q={quote(query)}&schema={schema.value}&external={bool(external)}"
-                            f"{client_id_param}&force_refresh={force_refresh}&search_strategy={search_strategy.value}"
+                            f"{client_id_param}&force_refresh={force_refresh}"
+                            f"{stale_delta_param}&search_strategy={search_strategy.value}"
                         ),
                     }
                     for query in queries
@@ -408,6 +419,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[ProductSchemaName] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
+        stale_delta: Optional[str] = None,
     ):
         """Get a batch of products by IDs.
 
@@ -421,6 +433,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
+            stale_delta: How much time has to pass before data is treated as stale.
+                Examples: "5h", "1d", "1w"
         """
 
         batch_size = 250
@@ -437,6 +451,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 limit=batch_size,
                 timeout=timeout,
                 owner_id=owner_id,
+                stale_delta=stale_delta,
             )
             for batched_ids in batched(ids, n=batch_size)
         ]
@@ -783,6 +798,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[ProductSchemaName] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
+        stale_delta: Optional[str] = None,
     ):
         """Get product.
 
@@ -797,6 +813,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
+            stale_delta: How much time has to pass before data is treated as stale.
+                Examples: "5h", "1d", "1w"
         """
 
         if not schema:
@@ -817,6 +835,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "external": external,
                     "force_refresh": force_refresh,
                     "schema": schema.value,
+                    "stale_delta": stale_delta,
                 }
             ),
             timeout=timeout,
@@ -902,6 +921,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[OfferSchemaName] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
+        stale_delta: Optional[str] = None,
     ):
         """Get product.
 
@@ -914,6 +934,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
+            stale_delta: How much time has to pass before data is treated as stale.
+                Examples: "5h", "1d", "1w"
         """
 
         if not schema:
@@ -934,6 +956,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "external": external,
                     "force_refresh": force_refresh,
                     "schema": schema.value,
+                    "stale_delta": stale_delta,
                 }
             ),
             timeout=timeout,
