@@ -15,6 +15,7 @@ from cofactr.schema import (
     ProductSchemaName,
     SupplierSchemaName,
 )
+from cofactr.schema.types import PartialPartInV0
 
 CONFIG = dotenv_values(Path(__file__).parent / "../.env.test")
 CLIENT_ID = CONFIG["CLIENT_ID"]
@@ -320,3 +321,23 @@ def test_get_canonical_product_ids(ids, expected_id_to_canonical_id):
     actual_id_to_canonical_id = graph.get_canonical_product_ids(ids=ids)
 
     assert actual_id_to_canonical_id == expected_id_to_canonical_id
+
+
+@pytest.mark.parametrize(
+    "product_id,data,owner_id",
+    [
+        ("COZSJWDV39RW", PartialPartInV0(description="test value"), "sdk test"),
+        ("COZSJWDV39RW", PartialPartInV0(description=None), "sdk test"),
+        ("COZSJWDV39RW", PartialPartInV0(custom_id="test value"), "sdk test"),
+    ],
+)
+def test_update_product(product_id, data, owner_id):
+    """Test updating a product."""
+
+    graph = GraphAPI(
+        client_id=CLIENT_ID,
+        api_key=API_KEY,
+        default_supplier_schema=SupplierSchemaName.FLAGSHIP,
+    )
+
+    graph.update_product(product_id=product_id, data=data, owner_id=owner_id)
