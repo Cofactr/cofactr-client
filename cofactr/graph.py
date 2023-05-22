@@ -278,9 +278,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
             search_strategy: Search strategy used to find products.
-            stale_delta: How much time has to pass before data is treated as stale, denoted as a
-                string consisting of a number and a unit. "ms", "s", "h", "d", and "w" are
-                supported units.
+            stale_delta: How much time has to pass before data is treated as stale.
                 Examples: "5h", "1d", "1w"
         """
 
@@ -346,9 +344,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
             search_strategy: Search strategy used to find products.
-            stale_delta: How much time has to pass before data is treated as stale, denoted as a
-                string consisting of a number and a unit. "ms", "s", "h", "d", and "w" are
-                supported units.
+            stale_delta: How much time has to pass before data is treated as stale.
                 Examples: "5h", "1d", "1w"
 
         Returns:
@@ -437,9 +433,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
-            stale_delta: How much time has to pass before data is treated as stale, denoted as a
-                string consisting of a number and a unit. "ms", "s", "h", "d", and "w" are
-                supported units.
+            stale_delta: How much time has to pass before data is treated as stale.
                 Examples: "5h", "1d", "1w"
         """
 
@@ -819,9 +813,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
-            stale_delta: How much time has to pass before data is treated as stale, denoted as a
-                string consisting of a number and a unit. "ms", "s", "h", "d", and "w" are
-                supported units.
+            stale_delta: How much time has to pass before data is treated as stale.
                 Examples: "5h", "1d", "1w"
         """
 
@@ -942,9 +934,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
-            stale_delta: How much time has to pass before data is treated as stale, denoted as a
-                string consisting of a number and a unit. "ms", "s", "h", "d", and "w" are
-                supported units.
+            stale_delta: How much time has to pass before data is treated as stale.
                 Examples: "5h", "1d", "1w"
         """
 
