@@ -898,19 +898,21 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         product_id: str,
         data: PartialPartInV0,
         timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
     ):
         """Update product.
 
         Args:
             product_id: Cofactr ID of product to update.
-            data: Data defining product updates.
+            data: Data defining product updates. A value of `None` represents delete.
             timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Data owner ID.
         """
 
         res = httpx.patch(
             f"{self.url}/products/{product_id}",
             json={
-                "owner_id": data["owner_id"],
+                "owner_id": owner_id,
                 "schema": "flagship",
                 "data": data,
             },
