@@ -902,7 +902,15 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
     ):
-        """Set custom product ID."""
+        """Set custom product ID.
+
+        Args:
+            product_id: Target product ID.
+            custom_id: Custom ID.
+            deprecated_custom_ids: Deprecated custom IDs.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Data owner ID.
+        """
 
         res = httpx.post(
             f"{self.url}/actions/custom-product-id-updates/",
