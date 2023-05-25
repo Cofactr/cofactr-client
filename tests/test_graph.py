@@ -1,5 +1,6 @@
 """Test GraphAPI."""
 # Standard Modules
+from datetime import datetime
 import json
 from pathlib import Path
 from typing import Any, Dict, List
@@ -20,6 +21,7 @@ from cofactr.schema.types import PartialPartInV0
 CONFIG = dotenv_values(Path(__file__).parent / "../.env.test")
 CLIENT_ID = CONFIG["CLIENT_ID"]
 API_KEY = CONFIG["API_KEY"]
+TIME_NOW = datetime.utcnow()
 
 
 @pytest.mark.parametrize(
@@ -35,7 +37,7 @@ def test_search_part(mpn: str):
         query=mpn,
         limit=1,
         external=False,
-        schema=ProductSchemaName.FLAGSHIP,
+        schema=ProductSchemaName.FLAGSHIP_V7,
     )
 
     assert len(res["data"]) > 0
@@ -54,7 +56,7 @@ def test_search_part(mpn: str):
             },
         ),
         (
-            "flagship-v2",
+            "flagship-v7",
             "TRRQ3ESYFO28",
             {
                 "id": "TRRQ3ESYFO28",
@@ -87,7 +89,7 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
 @pytest.mark.parametrize(
     "ids,schema",
     [
-        ([], ProductSchemaName.FLAGSHIP_V4),
+        ([], ProductSchemaName.FLAGSHIP_V7),
         (
             [
                 "CCI8TPV75AW2",
@@ -112,7 +114,7 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
                 "RCJYRQIWJNWH",
                 "XX8HGWW7521L",
             ],
-            ProductSchemaName.FLAGSHIP_V4,
+            ProductSchemaName.FLAGSHIP_V7,
         ),
         (
             [
@@ -130,7 +132,7 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
                 "XXNGAHF7HD8S",
                 "TRCAHGIXODI7",
             ],
-            ProductSchemaName.PRICE_SOLVER_V2,
+            ProductSchemaName.PRICE_SOLVER_V5,
         ),
     ],
 )
@@ -160,7 +162,7 @@ def test_get_offers(cpid: str):
     flagship_res = graph.get_offers(
         product_id=cpid,
         external=False,
-        schema=OfferSchemaName.FLAGSHIP_V2,
+        schema=OfferSchemaName.FLAGSHIP_V3,
     )
 
     assert flagship_res
@@ -180,7 +182,7 @@ def test_get_suppliers(query):
 
     graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
-    res = graph.get_suppliers(query=query, schema=SupplierSchemaName.FLAGSHIP)
+    res = graph.get_suppliers(query=query, schema=SupplierSchemaName.FLAGSHIP_V2)
 
     data = res["data"]
     assert data
@@ -194,7 +196,7 @@ def test_get_supplier(org_id):
 
     graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
-    res = graph.get_supplier(id=org_id, schema=SupplierSchemaName.FLAGSHIP)
+    res = graph.get_supplier(id=org_id, schema=SupplierSchemaName.FLAGSHIP_V2)
 
     assert res["data"].id == org_id
 
@@ -262,7 +264,7 @@ def test_get_products_by_searches(mpns):
     graph = GraphAPI(
         client_id=CLIENT_ID,
         api_key=API_KEY,
-        default_product_schema=ProductSchemaName.FLAGSHIP_V6,
+        default_product_schema=ProductSchemaName.FLAGSHIP_V7,
     )
 
     mpn_to_products = graph.get_products_by_searches(queries=mpns, search_strategy=SearchStrategy.MPN_SKU_MFR)
@@ -278,7 +280,7 @@ def test_get_suppliers_by_ids(ids):
     graph = GraphAPI(
         client_id=CLIENT_ID,
         api_key=API_KEY,
-        default_supplier_schema=SupplierSchemaName.FLAGSHIP,
+        default_supplier_schema=SupplierSchemaName.FLAGSHIP_V2,
     )
 
     id_to_supplier = graph.get_suppliers_by_ids(ids=ids)
@@ -315,7 +317,7 @@ def test_get_canonical_product_ids(ids, expected_id_to_canonical_id):
     graph = GraphAPI(
         client_id=CLIENT_ID,
         api_key=API_KEY,
-        default_supplier_schema=SupplierSchemaName.FLAGSHIP,
+        default_supplier_schema=SupplierSchemaName.FLAGSHIP_V2,
     )
 
     actual_id_to_canonical_id = graph.get_canonical_product_ids(ids=ids)
@@ -337,7 +339,30 @@ def test_update_product(product_id, data, owner_id):
     graph = GraphAPI(
         client_id=CLIENT_ID,
         api_key=API_KEY,
-        default_supplier_schema=SupplierSchemaName.FLAGSHIP,
+        default_supplier_schema=SupplierSchemaName.FLAGSHIP_V2,
     )
 
     graph.update_product(product_id=product_id, data=data, owner_id=owner_id)
+
+@pytest.mark.parametrize(
+    "id_to_custom_id,owner_id",
+    [
+        (
+            {
+                "XXL0Z0HB5JGI": f"example custom ID: {TIME_NOW}",
+                "IMC4MDWZJJ09": f"another example custom ID: {TIME_NOW}",
+            },
+            "sdk test",
+        ),
+    ],
+)
+def test_set_custom_product_ids(id_to_custom_id, owner_id):
+    """Test setting custom product IDs."""
+
+    graph = GraphAPI(
+        client_id=CLIENT_ID,
+        api_key=API_KEY,
+        default_supplier_schema=SupplierSchemaName.FLAGSHIP_V2,
+    )
+
+    graph.set_custom_product_ids(id_to_custom_id=id_to_custom_id, owner_id=owner_id)

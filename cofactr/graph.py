@@ -278,8 +278,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
             search_strategy: Search strategy used to find products.
-            stale_delta: How much time has to pass before data is treated as stale.
-                Examples: "5h", "1d", "1w"
+            stale_delta: How much time has to pass before data is treated as stale. Use "inf" or
+                "infinite" to indicate data should not be refreshed, no matter how old.
+                Examples: "5h", "1d", "1w", "inf"
         """
 
         if not schema:
@@ -344,8 +345,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
             search_strategy: Search strategy used to find products.
-            stale_delta: How much time has to pass before data is treated as stale.
-                Examples: "5h", "1d", "1w"
+            stale_delta: How much time has to pass before data is treated as stale. Use "inf" or
+                "infinite" to indicate data should not be refreshed, no matter how old.
+                Examples: "5h", "1d", "1w", "inf"
 
         Returns:
             A dictionary mapping each MPN to a list of matching products.
@@ -433,10 +435,14 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
-            stale_delta: How much time has to pass before data is treated as stale.
-                Examples: "5h", "1d", "1w"
+            stale_delta: How much time has to pass before data is treated as stale. Use "inf" or
+                "infinite" to indicate data should not be refreshed, no matter how old.
+                Examples: "5h", "1d", "1w", "inf"
         """
 
+        if not ids:
+            return {}
+    
         batch_size = 250
 
         if not schema:
@@ -483,6 +489,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         """Get the canonical product ID for each of the given IDs, which may or may not be
         deprecated.
         """
+
+        if not ids:
+            return {}
 
         batch_size = 500
 
@@ -649,6 +658,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             owner_id: Specifies which private data to access.
         """
 
+        if not ids:
+            return {}
+
         batch_size = 250
 
         if not schema:
@@ -813,8 +825,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
-            stale_delta: How much time has to pass before data is treated as stale.
-                Examples: "5h", "1d", "1w"
+            stale_delta: How much time has to pass before data is treated as stale. Use "inf" or
+                "infinite" to indicate data should not be refreshed, no matter how old.
+                Examples: "5h", "1d", "1w", "inf"
         """
 
         if not schema:
@@ -946,6 +959,47 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         )
 
         res.raise_for_status()
+    
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
+    def set_custom_product_ids(
+        self,
+        id_to_custom_id: Dict[str, Optional[str]],
+        timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
+    ):
+        """Set custom product IDs.
+
+        Args:
+            id_to_custom_id: Map from Cofactr product ID to desired custom ID.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Data owner ID.
+        """
+
+        if not id_to_custom_id:
+            return
+
+        res = httpx.post(
+            f"{self.url}/actions/custom-product-id-mappings/",
+            json={
+                "owner_id": owner_id,
+                "id_to_custom_id": id_to_custom_id,
+            },
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            timeout=timeout,
+            follow_redirects=True,
+        )
+
+        res.raise_for_status()
 
 
     @retry(
@@ -976,8 +1030,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
-            stale_delta: How much time has to pass before data is treated as stale.
-                Examples: "5h", "1d", "1w"
+            stale_delta: How much time has to pass before data is treated as stale. Use "inf" or
+                "infinite" to indicate data should not be refreshed, no matter how old.
+                Examples: "5h", "1d", "1w", "inf"
         """
 
         if not schema:
