@@ -929,8 +929,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         self,
         product_id: str,
         data: PartialPartInV0,
+        owner_id: str,
         timeout: Optional[int] = None,
-        owner_id: Optional[str] = None,
     ):
         """Update product.
 
