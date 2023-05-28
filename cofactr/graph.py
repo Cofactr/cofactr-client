@@ -929,6 +929,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         self,
         product_id: str,
         data: PartialPartInV0,
+        # NOTE: If owner_id is set to default to "me" then annotate to Optional[str]
         owner_id: str,
         timeout: Optional[int] = None,
     ):
@@ -940,6 +941,10 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Data owner ID.
         """
+
+        # TODO: Modify KB API to raise a NotImplementedError if 'owner_id' in data is set to null.
+        # Currently, making private products public by removing 'owner_id' is not supported. Then,
+        # handle the error here (i.e., provide more context about this limitation).
 
         res = httpx.patch(
             f"{self.url}/products/{product_id}",

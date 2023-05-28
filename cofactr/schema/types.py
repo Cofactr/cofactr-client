@@ -75,6 +75,8 @@ class PartInV0(TypedDict):
 class PartialPartInV0(TypedDict):
     """Partial part input."""
 
+    owner_id: NotRequired[str]
+
     mpn: NotRequired[Optional[List[str]]]
     alt_mpns: NotRequired[Optional[List[str]]]
     custom_id: NotRequired[Optional[str]]
