@@ -28,6 +28,13 @@ class Completion(TypedDict):
     label: str
 
 
+LifecycleStatusType = Literal[
+    "New",
+    "NRFND",
+    "Production",
+    "EOL",
+    "Obsolete",
+]
 TerminationType = Literal[
     "other",
     "SMT",
@@ -37,7 +44,6 @@ TerminationType = Literal[
     "hybrid of pressed fit and SMT",
     "hybrid of pressed fit and THT",
 ]
-
 
 class ManufacturerInV0(TypedDict):
     """Manufacturer input."""
@@ -84,6 +90,7 @@ class PartialPartInV0(TypedDict):
 
     classification: NotRequired[Optional[ClassificationInV0]]
     description: NotRequired[Optional[str]]
+    lifecycle_status: NotRequired[Optional[LifecycleStatusType]]
     msl: NotRequired[Optional[str]]
     package: NotRequired[Optional[str]]
     terminations: NotRequired[Optional[int]]

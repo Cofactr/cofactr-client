@@ -330,17 +330,13 @@ def test_get_canonical_product_ids(ids, expected_id_to_canonical_id):
     [
         ("COZSJWDV39RW", PartialPartInV0(description="test value"), "sdk test"),
         ("COZSJWDV39RW", PartialPartInV0(description=None), "sdk test"),
-        ("COZSJWDV39RW", PartialPartInV0(custom_id="test value"), "sdk test"),
+        ("COZSJWDV39RW", PartialPartInV0(custom_id="test value", lifecycle_status="Production"), "sdk test"),
     ],
 )
 def test_update_product(product_id, data, owner_id):
     """Test updating a product."""
 
-    graph = GraphAPI(
-        client_id=CLIENT_ID,
-        api_key=API_KEY,
-        default_supplier_schema=SupplierSchemaName.FLAGSHIP_V2,
-    )
+    graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
     graph.update_product(product_id=product_id, data=data, owner_id=owner_id)
 
