@@ -359,7 +359,6 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_product_schema
 
-        client_id_param = f"&client_id={quote(owner_id)}" if owner_id else ""
         stale_delta_param = f"&stale_delta={stale_delta}" if stale_delta else ""
 
         res = httpx.post(
@@ -376,13 +375,14 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                         "method": "GET",
                         "relative_url": (
                             f"?q={quote(query)}&schema={schema.value}&external={bool(external)}"
-                            f"{client_id_param}&force_refresh={force_refresh}"
-                            f"{stale_delta_param}&search_strategy={search_strategy.value}"
+                            f"&force_refresh={force_refresh}{stale_delta_param}"
+                            f"&search_strategy={search_strategy.value}"
                         ),
                     }
                     for query in queries
                 ]
             },
+            params=drop_none_values({"owner_id": owner_id}),
             timeout=timeout,
             follow_redirects=True,
         )
