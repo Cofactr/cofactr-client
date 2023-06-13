@@ -132,7 +132,13 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
                 "XXNGAHF7HD8S",
                 "TRCAHGIXODI7",
             ],
-            ProductSchemaName.PRICE_SOLVER_V5,
+            ProductSchemaName.PRICE_SOLVER_V6,
+        ),
+        (
+            [
+                "IMC4MDWZJJ09",
+            ],
+            ProductSchemaName.FLAGSHIP_ALTS_V0,
         ),
     ],
 )
