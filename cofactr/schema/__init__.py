@@ -9,7 +9,7 @@ from cofactr.schema.flagship import FlagshipOffer, FlagshipPart, FlagshipSeller
 from cofactr.schema.flagship_v2 import FlagshipV2Offer, FlagshipV2Part, FlagshipV2Seller
 from cofactr.schema.flagship_v3 import FlagshipV3Offer, FlagshipV3Part, FlagshipV3Seller
 from cofactr.schema.flagship_v4 import FlagshipV4Part, FlagshipV4Offer
-from cofactr.schema.flagship_v5 import  FlagshipV5Part
+from cofactr.schema.flagship_v5 import FlagshipV5Part
 from cofactr.schema.flagship_v6 import FlagshipV6Part
 from cofactr.schema.flagship_v7 import FlagshipV7Part
 from cofactr.schema.flagship_alts_v0 import FlagshipAltsV0Part
@@ -17,14 +17,19 @@ from cofactr.schema.flagship_cache_v0 import FlagshipCacheV0Part
 from cofactr.schema.flagship_cache_v1 import FlagshipCacheV1Part
 from cofactr.schema.flagship_cache_v2 import FlagshipCacheV2Part
 from cofactr.schema.flagship_cache_v3 import FlagshipCacheV3Part
+from cofactr.schema.flagship_cache_v4 import FlagshipCacheV4Part
 from cofactr.schema.logistics import LogisticsOffer, LogisticsPart
-from cofactr.schema.logistics_v2 import LogisticsV2Part, LogisticsV2Offer, LogisticsV2Seller
+from cofactr.schema.logistics_v2 import (
+    LogisticsV2Part,
+    LogisticsV2Offer,
+    LogisticsV2Seller,
+)
 from cofactr.schema.logistics_v3 import LogisticsV3Part
 from cofactr.schema.logistics_v4 import LogisticsV4Part
 from cofactr.schema.price_solver_v0 import PriceSolverV0Part
 from cofactr.schema.price_solver_v1 import PriceSolverV1Part
 from cofactr.schema.price_solver_v2 import PriceSolverV2Part
-from cofactr.schema.price_solver_v3 import  PriceSolverV3Part
+from cofactr.schema.price_solver_v3 import PriceSolverV3Part
 from cofactr.schema.price_solver_v4 import PriceSolverV4Part
 from cofactr.schema.price_solver_v5 import PriceSolverV5Part
 from cofactr.schema.price_solver_v6 import PriceSolverV6Part
@@ -46,6 +51,7 @@ class ProductSchemaName(str, Enum):
     FLAGSHIP_CACHE_V1 = "flagship-cache-v1"
     FLAGSHIP_CACHE_V2 = "flagship-cache-v2"
     FLAGSHIP_CACHE_V3 = "flagship-cache-v3"
+    FLAGSHIP_CACHE_V4 = "flagship-cache-v4"
     LOGISTICS = "logistics"
     LOGISTICS_V2 = "logistics-v2"
     LOGISTICS_V3 = "logistics-v3"
@@ -72,6 +78,7 @@ schema_to_product: Dict[ProductSchemaName, Callable] = {
     ProductSchemaName.FLAGSHIP_CACHE_V1: FlagshipCacheV1Part,
     ProductSchemaName.FLAGSHIP_CACHE_V2: FlagshipCacheV2Part,
     ProductSchemaName.FLAGSHIP_CACHE_V3: FlagshipCacheV3Part,
+    ProductSchemaName.FLAGSHIP_CACHE_V4: FlagshipCacheV4Part,
     ProductSchemaName.LOGISTICS: LogisticsPart,
     ProductSchemaName.LOGISTICS_V2: LogisticsV2Part,
     ProductSchemaName.LOGISTICS_V3: LogisticsV3Part,
