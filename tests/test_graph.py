@@ -125,7 +125,7 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
                 "INKADXLYWJQC",
                 "TRGC72NRRA4W",
             ],
-            ProductSchemaName.FLAGSHIP_CACHE_V1,
+            ProductSchemaName.FLAGSHIP_CACHE_V4,
         ),
         (
             [
@@ -231,7 +231,6 @@ def test_autocomplete_orgs(query, expected_completions):
     assert {json.dumps(x, sort_keys=True) for x in completions} == expected_completions
 
 
-
 @pytest.mark.parametrize(
     "query,expected_completions",
     [
@@ -273,7 +272,9 @@ def test_get_products_by_searches(mpns):
         default_product_schema=ProductSchemaName.FLAGSHIP_V7,
     )
 
-    mpn_to_products = graph.get_products_by_searches(queries=mpns, search_strategy=SearchStrategy.MPN_SKU_MFR)
+    mpn_to_products = graph.get_products_by_searches(
+        queries=mpns, search_strategy=SearchStrategy.MPN_SKU_MFR
+    )
 
     assert mpn_to_products["2N7002LT1G"]
     assert mpn_to_products["CC0603JRNPOABN100"]
@@ -336,7 +337,11 @@ def test_get_canonical_product_ids(ids, expected_id_to_canonical_id):
     [
         ("COZSJWDV39RW", PartialPartInV0(description="test value"), "sdk test"),
         ("COZSJWDV39RW", PartialPartInV0(description=None), "sdk test"),
-        ("COZSJWDV39RW", PartialPartInV0(custom_id="test value", lifecycle_status="Production"), "sdk test"),
+        (
+            "COZSJWDV39RW",
+            PartialPartInV0(custom_id="test value", lifecycle_status="Production"),
+            "sdk test",
+        ),
     ],
 )
 def test_update_product(product_id, data, owner_id):
@@ -345,6 +350,7 @@ def test_update_product(product_id, data, owner_id):
     graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
     graph.update_product(product_id=product_id, data=data, owner_id=owner_id)
+
 
 @pytest.mark.parametrize(
     "id_to_custom_id,owner_id",
