@@ -5,7 +5,12 @@ from typing import Callable, Dict
 
 # Local Modules
 from cofactr.helpers import identity
-from cofactr.schema.flagship import FlagshipOffer, FlagshipPart, FlagshipSeller
+from cofactr.schema.flagship import (
+    FlagshipOffer,
+    FlagshipOrderStatus,
+    FlagshipPart,
+    FlagshipSeller,
+)
 from cofactr.schema.flagship_v2 import FlagshipV2Offer, FlagshipV2Part, FlagshipV2Seller
 from cofactr.schema.flagship_v3 import FlagshipV3Offer, FlagshipV3Part, FlagshipV3Seller
 from cofactr.schema.flagship_v4 import FlagshipV4Part, FlagshipV4Offer, FlagshipV4Seller
@@ -164,4 +169,15 @@ schema_to_supplier: Dict[SupplierSchemaName, Callable] = {
     SupplierSchemaName.FLAGSHIP_V4: FlagshipV4Seller,
     SupplierSchemaName.LOGISTICS: FlagshipSeller,
     SupplierSchemaName.LOGISTICS_V2: LogisticsV2Seller,
+}
+
+
+class OrderSchemaName(str, Enum):
+    """Order schema name."""
+
+    FLAGSHIP = "flagship"
+
+
+schema_to_order: Dict[OrderSchemaName, Callable] = {
+    OrderSchemaName.FLAGSHIP: FlagshipOrderStatus,
 }

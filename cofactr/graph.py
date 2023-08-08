@@ -23,6 +23,7 @@ from tenacity import (
 from cofactr.helpers import parse_entities
 from cofactr.schema import (
     OfferSchemaName,
+    OrderSchemaName,
     OrgSchemaName,
     ProductSchemaName,
     SupplierSchemaName,
@@ -34,6 +35,7 @@ from cofactr.schema import (
 from cofactr.schema.types import Completion, PartInV0, PartialPartInV0
 
 Protocol = Literal["http", "https"]
+
 
 class SearchStrategy(str, Enum):
     """Search strategy."""
@@ -213,15 +215,16 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         protocol: Optional[Protocol] = PROTOCOL,
         host: Optional[str] = HOST,
         default_product_schema: ProductSchemaName = ProductSchemaName.FLAGSHIP,
+        default_order_schema: OrderSchemaName = OrderSchemaName.FLAGSHIP,
         default_org_schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
         default_offer_schema: OfferSchemaName = OfferSchemaName.FLAGSHIP,
         default_supplier_schema: SupplierSchemaName = SupplierSchemaName.FLAGSHIP,
         client_id: Optional[str] = None,
         api_key: Optional[str] = None,
     ):
-
         self.url = f"{protocol}://{host}"
         self.default_product_schema = default_product_schema
+        self.default_order_schema = default_order_schema
         self.default_org_schema = default_org_schema
         self.default_offer_schema = default_offer_schema
         self.default_supplier_schema = default_supplier_schema
@@ -442,7 +445,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         if not ids:
             return {}
-    
+
         batch_size = 250
 
         if not schema:
@@ -959,7 +962,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         )
 
         res.raise_for_status()
-    
+
     @retry(
         reraise=retry_settings.reraise,
         retry=retry_settings.retry,
@@ -1000,7 +1003,6 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         )
 
         res.raise_for_status()
-
 
     @retry(
         reraise=retry_settings.reraise,
@@ -1157,3 +1159,31 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         )
 
         return res_json
+
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
+    def get_orders(
+        self,
+        schema: Optional[OrderSchemaName] = None,
+        timeout: Optional[int] = None,
+        filtering: Optional[List[Dict]] = None,
+        owner_id: Optional[str] = None,
+    ):
+        """Get orders.
+
+        Args:
+            schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+            filtering: Filter suppliers.
+                Example: `[{"field":"id","operator":"IN","value":["622fb450e4c292d8287b0af5"]}]`.
+            owner_id: Specifies which private data to access.
+        """
+
+        if not schema:
+            schema = self.default_order_schema
+
+        return
