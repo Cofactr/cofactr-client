@@ -28,6 +28,7 @@ from cofactr.schema import (
     ProductSchemaName,
     SupplierSchemaName,
     schema_to_offer,
+    schema_to_order,
     schema_to_org,
     schema_to_product,
     schema_to_supplier,
@@ -35,6 +36,8 @@ from cofactr.schema import (
 from cofactr.schema.types import Completion, PartInV0, PartialPartInV0
 
 Protocol = Literal["http", "https"]
+
+_MAX_BATCH_SIZE = 250
 
 
 class SearchStrategy(str, Enum):
@@ -364,49 +367,50 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         stale_delta_param = f"&stale_delta={stale_delta}" if stale_delta else ""
 
-        res = httpx.post(
-            f"{self.url}/batch/products/",
-            headers=drop_none_values(
-                {
-                    "X-CLIENT-ID": self.client_id,
-                    "X-API-KEY": self.api_key,
-                }
-            ),
-            json={
-                "batch": [
-                    {
-                        "method": "GET",
-                        "relative_url": (
-                            f"?q={quote(query)}&schema={schema.value}&external={bool(external)}"
-                            f"&force_refresh={force_refresh}{stale_delta_param}"
-                            f"&search_strategy={search_strategy.value}"
-                        ),
-                    }
-                    for query in queries
-                ]
-            },
-            params=drop_none_values({"owner_id": owner_id}),
-            timeout=timeout,
-            follow_redirects=True,
-        )
-
-        res.raise_for_status()
-
-        responses = res.json()
-
-        Product = schema_to_product[schema]  # pylint: disable=invalid-name
-
         query_to_products: Dict[str, Any] = {}
 
-        for query, response in zip(queries, responses):
-            matches = []
+        for query_batch in batched(queries, n=_MAX_BATCH_SIZE):
+            res = httpx.post(
+                f"{self.url}/batch/products/",
+                headers=drop_none_values(
+                    {
+                        "X-CLIENT-ID": self.client_id,
+                        "X-API-KEY": self.api_key,
+                    }
+                ),
+                json={
+                    "batch": [
+                        {
+                            "method": "GET",
+                            "relative_url": (
+                                f"?q={quote(query)}&schema={schema.value}&external={bool(external)}"
+                                f"&force_refresh={force_refresh}{stale_delta_param}"
+                                f"&search_strategy={search_strategy.value}"
+                            ),
+                        }
+                        for query in query_batch
+                    ]
+                },
+                params=drop_none_values({"owner_id": owner_id}),
+                timeout=timeout,
+                follow_redirects=True,
+            )
 
-            if response["code"] == 200:
-                data = response["body"]["data"]
+            res.raise_for_status()
 
-                matches = [Product(**product_data) for product_data in data]
+            responses = res.json()
 
-            query_to_products[query] = matches
+            Product = schema_to_product[schema]  # pylint: disable=invalid-name
+
+            for query, response in zip(query_batch, responses):
+                matches = []
+
+                if response["code"] == 200:
+                    data = response["body"]["data"]
+
+                    matches = [Product(**product_data) for product_data in data]
+
+                query_to_products[query] = matches
 
         return query_to_products
 
@@ -446,8 +450,6 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not ids:
             return {}
 
-        batch_size = 250
-
         if not schema:
             schema = self.default_product_schema
 
@@ -457,12 +459,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 force_refresh=force_refresh,
                 schema=schema,
                 filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
-                limit=batch_size,
+                limit=_MAX_BATCH_SIZE,
                 timeout=timeout,
                 owner_id=owner_id,
                 stale_delta=stale_delta,
             )
-            for batched_ids in batched(ids, n=batch_size)
+            for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
         ]
 
         products_data = list(
@@ -496,8 +498,6 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not ids:
             return {}
 
-        batch_size = 500
-
         batched_products = [
             self.get_products(
                 fields="id,deprecated_ids",
@@ -505,11 +505,11 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 force_refresh=False,
                 schema=ProductSchemaName.INTERNAL,
                 filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
-                limit=batch_size,
+                limit=_MAX_BATCH_SIZE,
                 timeout=timeout,
                 owner_id=owner_id,
             )
-            for batched_ids in batched(ids, n=batch_size)
+            for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
         ]
 
         id_to_canonical_id = {}
@@ -664,8 +664,6 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not ids:
             return {}
 
-        batch_size = 250
-
         if not schema:
             schema = self.default_supplier_schema
 
@@ -673,11 +671,11 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             self.get_suppliers(
                 schema=schema,
                 filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
-                limit=batch_size,
+                limit=_MAX_BATCH_SIZE,
                 timeout=timeout,
                 owner_id=owner_id,
             )
-            for batched_ids in batched(ids, n=batch_size)
+            for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
         ]
 
         suppliers_data = list(
@@ -1178,12 +1176,77 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         Args:
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
-            filtering: Filter suppliers.
-                Example: `[{"field":"id","operator":"IN","value":["622fb450e4c292d8287b0af5"]}]`.
+            filtering: Filter orders.
+                Example: `[{"field":"id","operator":"IN","value":["digikey:12345678"]}]`.
             owner_id: Specifies which private data to access.
         """
 
         if not schema:
             schema = self.default_order_schema
 
-        return
+        res = httpx.get(
+            f"{self.url}/orders/",
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            params=drop_none_values(
+                {
+                    "owner_id": owner_id,
+                    "external": True,
+                    "schema": schema,
+                    "filtering": json.dumps(filtering) if filtering else None,
+                }
+            ),
+            timeout=timeout,
+            follow_redirects=True,
+        )
+
+        res.raise_for_status()
+
+        res_json = res.json()
+
+        Order = schema_to_order[schema]  # pylint: disable=invalid-name
+
+        res_json["data"] = [Order(**data) for data in res_json["data"]]
+
+        return res_json
+
+    def get_orders_by_ids(
+        self,
+        ids: List[str],
+        schema: Optional[OrderSchemaName] = None,
+        timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
+    ):
+        """Get a batch of orders by IDs.
+
+        Args:
+            ids: Cofactr order IDs to match on.
+            schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Specifies which private data to access.
+        """
+
+        if not ids:
+            return {}
+
+        if not schema:
+            schema = self.default_order_schema
+
+        batched_orders = [
+            self.get_orders(
+                schema=schema,
+                filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
+                timeout=timeout,
+                owner_id=owner_id,
+            )
+            for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
+        ]
+
+        orders_data = list(flatten([products["data"] for products in batched_orders]))
+
+        # All order schemas have `id` field.
+        return {order.id: order for order in orders_data}

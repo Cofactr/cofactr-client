@@ -34,8 +34,8 @@ class OrderStatusLine:
     quantity_shipped: Optional[int]
     quantity_backordered: Optional[int]
     country_of_origin: Optional[str]
-    backorder_schedules: List[ScheduledRelease]
-    schedules: List[ScheduledRelease]
+    backorder_schedule: List[ScheduledRelease]
+    schedule: List[ScheduledRelease]
 
     def __post_init__(self):
         """Convert types."""

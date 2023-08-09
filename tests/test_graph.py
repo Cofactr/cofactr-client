@@ -374,3 +374,55 @@ def test_set_custom_product_ids(id_to_custom_id, owner_id):
     )
 
     graph.set_custom_product_ids(id_to_custom_id=id_to_custom_id, owner_id=owner_id)
+
+
+@pytest.mark.parametrize(
+    "filtering,expected_order_ids",
+    [
+        (
+            [{"field": "id", "operator": "IN", "value": ["digikey:82103877"]}],
+            ["digikey:82103877"],
+        ),
+    ],
+)
+def test_get_orders(filtering, expected_order_ids):
+    """Test setting custom product IDs."""
+
+    graph = GraphAPI(
+        client_id=CLIENT_ID,
+        api_key=API_KEY,
+    )
+
+    res = graph.get_orders(filtering=filtering)
+
+    actual_orders = res["data"]
+    actual_order_ids = [order.id for order in actual_orders]
+
+    assert expected_order_ids == actual_order_ids
+
+
+@pytest.mark.parametrize(
+    "ids,expected_order_ids",
+    [
+        (
+            ["digikey:82103877"],
+            ["digikey:82103877"],
+        ),
+    ],
+)
+def test_get_orders_by_ids(ids, expected_order_ids):
+    """Test setting custom product IDs."""
+
+    graph = GraphAPI(
+        client_id=CLIENT_ID,
+        api_key=API_KEY,
+    )
+
+    id_to_order = graph.get_orders_by_ids(ids=ids)
+
+    assert expected_order_ids == list(id_to_order.keys())
+
+    for expected_order_id in expected_order_ids:
+        order = id_to_order[expected_order_id]
+
+        assert order.id == expected_order_id
