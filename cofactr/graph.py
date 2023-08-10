@@ -1175,7 +1175,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             filtering: Filter orders.
-                Example: `[{"field":"id","operator":"IN","value":["digikey:12345678"]}]`.
+                Example: `[{"field":"id","operator":"IN","value":["622fb450e4c292d8287b0af5:12345678"]}]`.
             owner_id: Specifies which private data to access.
         """
 

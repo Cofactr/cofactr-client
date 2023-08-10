@@ -380,8 +380,14 @@ def test_set_custom_product_ids(id_to_custom_id, owner_id):
     "filtering,expected_order_ids",
     [
         (
-            [{"field": "id", "operator": "IN", "value": ["digikey:82103877"]}],
-            ["digikey:82103877"],
+            [
+                {
+                    "field": "id",
+                    "operator": "IN",
+                    "value": ["622fb450e4c292d8287b0af5:82103877"],
+                }
+            ],
+            ["622fb450e4c292d8287b0af5:82103877"],
         ),
     ],
 )
@@ -405,8 +411,8 @@ def test_get_orders(filtering, expected_order_ids):
     "ids,expected_order_ids",
     [
         (
-            ["digikey:82103877"],
-            ["digikey:82103877"],
+            ["622fb450e4c292d8287b0af5:82103877"],
+            ["622fb450e4c292d8287b0af5:82103877"],
         ),
     ],
 )
