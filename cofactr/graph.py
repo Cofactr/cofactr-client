@@ -467,9 +467,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
         ]
 
-        products_data = list(
-            flatten([products["data"] for products in batched_products])
-        )
+        products_data = list(flatten([res["data"] for res in batched_products]))
 
         id_to_product = parse_entities(
             ids=ids,
@@ -1246,7 +1244,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
         ]
 
-        orders_data = list(flatten([products["data"] for products in batched_orders]))
+        orders_data = list(flatten([res["data"] for res in batched_orders]))
 
         # All order schemas have `id` field.
         return {order.id: order for order in orders_data}

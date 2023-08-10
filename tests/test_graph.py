@@ -386,7 +386,7 @@ def test_set_custom_product_ids(id_to_custom_id, owner_id):
     ],
 )
 def test_get_orders(filtering, expected_order_ids):
-    """Test setting custom product IDs."""
+    """Test getting orders."""
 
     graph = GraphAPI(
         client_id=CLIENT_ID,
@@ -411,7 +411,7 @@ def test_get_orders(filtering, expected_order_ids):
     ],
 )
 def test_get_orders_by_ids(ids, expected_order_ids):
-    """Test setting custom product IDs."""
+    """Test gettings orders from Cofactr order IDs."""
 
     graph = GraphAPI(
         client_id=CLIENT_ID,

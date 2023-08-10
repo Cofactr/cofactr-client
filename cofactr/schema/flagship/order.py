@@ -43,9 +43,7 @@ class OrderStatusLine:
         self.backorder_schedule = [
             ScheduledRelease(**schedule) for schedule in self.backorder_schedule
         ]
-        self.schedule = [
-            ScheduledRelease(**schedule) for schedule in self.backorder_schedule
-        ]
+        self.schedule = [ScheduledRelease(**schedule) for schedule in self.schedule]
 
 
 @dataclass
