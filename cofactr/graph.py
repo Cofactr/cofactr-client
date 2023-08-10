@@ -23,10 +23,12 @@ from tenacity import (
 from cofactr.helpers import parse_entities
 from cofactr.schema import (
     OfferSchemaName,
+    OrderSchemaName,
     OrgSchemaName,
     ProductSchemaName,
     SupplierSchemaName,
     schema_to_offer,
+    schema_to_order,
     schema_to_org,
     schema_to_product,
     schema_to_supplier,
@@ -216,6 +218,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         protocol: Optional[Protocol] = PROTOCOL,
         host: Optional[str] = HOST,
         default_product_schema: ProductSchemaName = ProductSchemaName.FLAGSHIP,
+        default_order_schema: OrderSchemaName = OrderSchemaName.FLAGSHIP,
         default_org_schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
         default_offer_schema: OfferSchemaName = OfferSchemaName.FLAGSHIP,
         default_supplier_schema: SupplierSchemaName = SupplierSchemaName.FLAGSHIP,
@@ -224,6 +227,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
     ):
         self.url = f"{protocol}://{host}"
         self.default_product_schema = default_product_schema
+        self.default_order_schema = default_order_schema
         self.default_org_schema = default_org_schema
         self.default_offer_schema = default_offer_schema
         self.default_supplier_schema = default_supplier_schema
@@ -463,9 +467,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
         ]
 
-        products_data = list(
-            flatten([products["data"] for products in batched_products])
-        )
+        products_data = list(flatten([res["data"] for res in batched_products]))
 
         id_to_product = parse_entities(
             ids=ids,
@@ -1153,3 +1155,96 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         )
 
         return res_json
+
+    @retry(
+        reraise=retry_settings.reraise,
+        retry=retry_settings.retry,
+        stop=retry_settings.stop,
+        wait=retry_settings.wait,
+    )
+    def get_orders(
+        self,
+        schema: Optional[OrderSchemaName] = None,
+        timeout: Optional[int] = None,
+        filtering: Optional[List[Dict]] = None,
+        owner_id: Optional[str] = None,
+    ):
+        """Get orders.
+
+        Args:
+            schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+            filtering: Filter orders.
+                Example: `[{"field":"id","operator":"IN","value":["622fb450e4c292d8287b0af5:12345678"]}]`.
+            owner_id: Specifies which private data to access.
+        """
+
+        if not schema:
+            schema = self.default_order_schema
+
+        res = httpx.get(
+            f"{self.url}/orders/",
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            params=drop_none_values(
+                {
+                    "owner_id": owner_id,
+                    "external": True,
+                    "schema": schema,
+                    "filtering": json.dumps(filtering) if filtering else None,
+                }
+            ),
+            timeout=timeout,
+            follow_redirects=True,
+        )
+
+        res.raise_for_status()
+
+        res_json = res.json()
+
+        Order = schema_to_order[schema]  # pylint: disable=invalid-name
+
+        res_json["data"] = [Order(**data) for data in res_json["data"]]
+
+        return res_json
+
+    def get_orders_by_ids(
+        self,
+        ids: List[str],
+        schema: Optional[OrderSchemaName] = None,
+        timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
+    ):
+        """Get a batch of orders by IDs.
+
+        Args:
+            ids: Cofactr order IDs to match on.
+            schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Specifies which private data to access.
+        """
+
+        if not ids:
+            return {}
+
+        if not schema:
+            schema = self.default_order_schema
+
+        batched_orders = [
+            self.get_orders(
+                schema=schema,
+                filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
+                timeout=timeout,
+                owner_id=owner_id,
+            )
+            for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
+        ]
+
+        orders_data = list(flatten([res["data"] for res in batched_orders]))
+
+        # All order schemas have `id` field.
+        return {order.id: order for order in orders_data}

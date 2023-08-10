@@ -5,12 +5,17 @@ from typing import Callable, Dict
 
 # Local Modules
 from cofactr.helpers import identity
-from cofactr.schema.flagship import FlagshipOffer, FlagshipPart, FlagshipSeller
+from cofactr.schema.flagship import (
+    FlagshipOffer,
+    FlagshipOrderStatus,
+    FlagshipPart,
+    FlagshipSeller,
+)
 from cofactr.schema.flagship_v2 import FlagshipV2Offer, FlagshipV2Part, FlagshipV2Seller
 from cofactr.schema.flagship_v3 import FlagshipV3Offer, FlagshipV3Part, FlagshipV3Seller
 from cofactr.schema.flagship_v4 import FlagshipV4Part, FlagshipV4Offer, FlagshipV4Seller
-from cofactr.schema.flagship_v5 import FlagshipV5Offer, FlagshipV5Part
-from cofactr.schema.flagship_v6 import FlagshipV6Part
+from cofactr.schema.flagship_v5 import FlagshipV5Offer, FlagshipV5Part, FlagshipV5Seller
+from cofactr.schema.flagship_v6 import FlagshipV6Offer, FlagshipV6Part
 from cofactr.schema.flagship_v7 import FlagshipV7Part
 from cofactr.schema.flagship_alts_v0 import FlagshipAltsV0Part
 from cofactr.schema.flagship_cache_v0 import FlagshipCacheV0Part
@@ -34,6 +39,7 @@ from cofactr.schema.price_solver_v4 import PriceSolverV4Part
 from cofactr.schema.price_solver_v5 import PriceSolverV5Part
 from cofactr.schema.price_solver_v6 import PriceSolverV6Part
 from cofactr.schema.price_solver_v7 import PriceSolverV7Part
+from cofactr.schema.price_solver_v8 import PriceSolverV8Part
 
 
 class ProductSchemaName(str, Enum):
@@ -65,6 +71,7 @@ class ProductSchemaName(str, Enum):
     PRICE_SOLVER_V5 = "price-solver-v5"
     PRICE_SOLVER_V6 = "price-solver-v6"
     PRICE_SOLVER_V7 = "price-solver-v7"
+    PRICE_SOLVER_V8 = "price-solver-v8"
 
 
 schema_to_product: Dict[ProductSchemaName, Callable] = {
@@ -93,6 +100,7 @@ schema_to_product: Dict[ProductSchemaName, Callable] = {
     ProductSchemaName.PRICE_SOLVER_V5: PriceSolverV5Part,
     ProductSchemaName.PRICE_SOLVER_V6: PriceSolverV6Part,
     ProductSchemaName.PRICE_SOLVER_V7: PriceSolverV7Part,
+    ProductSchemaName.PRICE_SOLVER_V8: PriceSolverV8Part,
 }
 
 
@@ -105,6 +113,7 @@ class OfferSchemaName(str, Enum):
     FLAGSHIP_V3 = "flagship-v3"
     FLAGSHIP_V4 = "flagship-v4"
     FLAGSHIP_V5 = "flagship-v5"
+    FLAGSHIP_V6 = "flagship-v6"
     LOGISTICS = "logistics"
     LOGISTICS_V2 = "logistics-v2"
 
@@ -116,6 +125,7 @@ schema_to_offer: Dict[OfferSchemaName, Callable] = {
     OfferSchemaName.FLAGSHIP_V3: FlagshipV3Offer,
     OfferSchemaName.FLAGSHIP_V4: FlagshipV4Offer,
     OfferSchemaName.FLAGSHIP_V5: FlagshipV5Offer,
+    OfferSchemaName.FLAGSHIP_V6: FlagshipV6Offer,
     OfferSchemaName.LOGISTICS: LogisticsOffer,
     OfferSchemaName.LOGISTICS_V2: LogisticsV2Offer,
 }
@@ -129,6 +139,7 @@ class OrgSchemaName(str, Enum):
     FLAGSHIP_V2 = "flagship-v2"
     FLAGSHIP_V3 = "flagship-v3"
     FLAGSHIP_V4 = "flagship-v4"
+    FLAGSHIP_V5 = "flagship-v5"
     LOGISTICS = "logistics"
     LOGISTICS_V2 = "logistics-v2"
 
@@ -139,6 +150,7 @@ schema_to_org: Dict[OrgSchemaName, Callable] = {
     OrgSchemaName.FLAGSHIP_V2: FlagshipV2Seller,
     OrgSchemaName.FLAGSHIP_V3: FlagshipV3Seller,
     OrgSchemaName.FLAGSHIP_V4: FlagshipV4Seller,
+    OrgSchemaName.FLAGSHIP_V5: FlagshipV5Seller,
     OrgSchemaName.LOGISTICS: FlagshipSeller,
     OrgSchemaName.LOGISTICS_V2: LogisticsV2Seller,
 }
@@ -152,6 +164,7 @@ class SupplierSchemaName(str, Enum):
     FLAGSHIP_V2 = "flagship-v2"
     FLAGSHIP_V3 = "flagship-v3"
     FLAGSHIP_V4 = "flagship-v4"
+    FLAGSHIP_V5 = "flagship-v5"
     LOGISTICS = "logistics"
     LOGISTICS_V2 = "logistics-v2"
 
@@ -162,6 +175,18 @@ schema_to_supplier: Dict[SupplierSchemaName, Callable] = {
     SupplierSchemaName.FLAGSHIP_V2: FlagshipV2Seller,
     SupplierSchemaName.FLAGSHIP_V3: FlagshipV3Seller,
     SupplierSchemaName.FLAGSHIP_V4: FlagshipV4Seller,
+    SupplierSchemaName.FLAGSHIP_V5: FlagshipV5Seller,
     SupplierSchemaName.LOGISTICS: FlagshipSeller,
     SupplierSchemaName.LOGISTICS_V2: LogisticsV2Seller,
+}
+
+
+class OrderSchemaName(str, Enum):
+    """Order schema name."""
+
+    FLAGSHIP = "flagship"
+
+
+schema_to_order: Dict[OrderSchemaName, Callable] = {
+    OrderSchemaName.FLAGSHIP: FlagshipOrderStatus,
 }
