@@ -132,7 +132,7 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
                 "XXNGAHF7HD8S",
                 "TRCAHGIXODI7",
             ],
-            ProductSchemaName.PRICE_SOLVER_V7,
+            ProductSchemaName.PRICE_SOLVER_V8,
         ),
         (
             [
@@ -168,7 +168,7 @@ def test_get_offers(cpid: str):
     flagship_res = graph.get_offers(
         product_id=cpid,
         external=False,
-        schema=OfferSchemaName.FLAGSHIP_V5,
+        schema=OfferSchemaName.FLAGSHIP_V6,
     )
 
     assert flagship_res
@@ -188,7 +188,7 @@ def test_get_suppliers(query):
 
     graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
-    res = graph.get_suppliers(query=query, schema=SupplierSchemaName.FLAGSHIP_V4)
+    res = graph.get_suppliers(query=query, schema=SupplierSchemaName.FLAGSHIP_V5)
 
     data = res["data"]
     assert data
@@ -202,7 +202,7 @@ def test_get_supplier(org_id):
 
     graph = GraphAPI(client_id=CLIENT_ID, api_key=API_KEY)
 
-    res = graph.get_supplier(id=org_id, schema=SupplierSchemaName.FLAGSHIP_V4)
+    res = graph.get_supplier(id=org_id, schema=SupplierSchemaName.FLAGSHIP_V5)
 
     assert res["data"].id == org_id
 
@@ -287,7 +287,7 @@ def test_get_suppliers_by_ids(ids):
     graph = GraphAPI(
         client_id=CLIENT_ID,
         api_key=API_KEY,
-        default_supplier_schema=SupplierSchemaName.FLAGSHIP_V4,
+        default_supplier_schema=SupplierSchemaName.FLAGSHIP_V5,
     )
 
     id_to_supplier = graph.get_suppliers_by_ids(ids=ids)
@@ -324,7 +324,7 @@ def test_get_canonical_product_ids(ids, expected_id_to_canonical_id):
     graph = GraphAPI(
         client_id=CLIENT_ID,
         api_key=API_KEY,
-        default_supplier_schema=SupplierSchemaName.FLAGSHIP_V4,
+        default_supplier_schema=SupplierSchemaName.FLAGSHIP_V5,
     )
 
     actual_id_to_canonical_id = graph.get_canonical_product_ids(ids=ids)
@@ -370,7 +370,7 @@ def test_set_custom_product_ids(id_to_custom_id, owner_id):
     graph = GraphAPI(
         client_id=CLIENT_ID,
         api_key=API_KEY,
-        default_supplier_schema=SupplierSchemaName.FLAGSHIP_V4,
+        default_supplier_schema=SupplierSchemaName.FLAGSHIP_V5,
     )
 
     graph.set_custom_product_ids(id_to_custom_id=id_to_custom_id, owner_id=owner_id)
