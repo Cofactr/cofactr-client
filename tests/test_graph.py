@@ -125,7 +125,7 @@ def test_get_product(schema: ProductSchemaName, cpid: str, expected: Dict[str, A
                 "INKADXLYWJQC",
                 "TRGC72NRRA4W",
             ],
-            ProductSchemaName.FLAGSHIP_CACHE_V4,
+            ProductSchemaName.FLAGSHIP_CACHE_V5,
         ),
         (
             [
