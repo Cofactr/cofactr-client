@@ -16,7 +16,13 @@ from cofactr.schema import (
     ProductSchemaName,
     SupplierSchemaName,
 )
-from cofactr.schema.types import PartialPartInV0
+from cofactr.schema.types import (
+    ContactV0,
+    OrderInV0,
+    OrderLineInV0,
+    PartialPartInV0,
+    PostalAddressV0,
+)
 
 CONFIG = dotenv_values(Path(__file__).parent / "../.env.test")
 CLIENT_ID = CONFIG["CLIENT_ID"]
@@ -432,3 +438,69 @@ def test_get_orders_by_ids(ids, expected_order_ids):
         order = id_to_order[expected_order_id]
 
         assert order.id == expected_order_id
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        OrderInV0(
+            seller_id="digikey",
+            po_number="123",
+            buyer_contact=ContactV0(
+                seller_customer_id="0",
+                company="Cofactr",
+                first_name="Ex",
+                last_name="Ample",
+                telephone="",
+                email="example@cofactr.com",
+                address=PostalAddressV0(
+                    country="US",
+                    region="New York",
+                    locality="Brookyln",
+                    postal_code="11211",
+                    street_address_line_one="1 Example Street",
+                    street_address_line_two="Suite 1",
+                ),
+            ),
+            shipping_contact=ContactV0(
+                seller_customer_id="0",
+                company="Cofactr",
+                first_name="Ex",
+                last_name="Ample",
+                telephone="",
+                email="example@cofactr.com",
+                address=PostalAddressV0(
+                    country="US",
+                    region="New York",
+                    locality="Brookyln",
+                    postal_code="11211",
+                    street_address_line_one="1 Example Street",
+                    street_address_line_two="Suite 1",
+                ),
+            ),
+            shipment_grouping_preference="as-available",
+            shipping_methods=["UPS ground"],
+            order_lines=[
+                OrderLineInV0(
+                    customer_reference="",
+                    cofactr_product_id="ICR446EIPYNM",
+                    seller_product_id="497-8552-1-ND",
+                    quantity_ordered=1,
+                    expected_unit_price=10,
+                    schedule=[],
+                )
+            ],
+        ),
+    ],
+)
+def test_create_order(data):
+    """Test gettings orders from Cofactr order IDs."""
+
+    graph = GraphAPI(
+        client_id=CLIENT_ID,
+        api_key=API_KEY,
+    )
+
+    order_id = graph.create_order(data=data, is_sandbox=True)
+
+    assert order_id
