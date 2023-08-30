@@ -45,6 +45,7 @@ TerminationType = Literal[
     "hybrid of pressed fit and THT",
 ]
 
+
 class ManufacturerInV0(TypedDict):
     """Manufacturer input."""
 
@@ -77,6 +78,7 @@ class PartInV0(TypedDict):
     package: NotRequired[Optional[str]]
     terminations: NotRequired[Optional[int]]
     termination_type: NotRequired[Optional[TerminationType]]
+
 
 class PartialPartInV0(TypedDict):
     """Partial part input."""
@@ -169,7 +171,9 @@ class OrderInV0(TypedDict):
     # Billing account ID (Example: Digi-Key Net Terms Billing account number). If it is `None`
     # or not provided, the fall back will be the default set up in integration-wide configuration.
     billing_account_id: NotRequired[Optional[str]]
-    shipment_grouping_preference: Literal["unspecified", "as-available", "min-shipments"]
+    shipment_grouping_preference: Literal[
+        "unspecified", "as-available", "min-shipments"
+    ]
     # Shipping methods in order of preference (Example: `["FedEx Ground"]`).
     shipping_methods: List[str]
     order_lines: List[OrderLineInV0]
