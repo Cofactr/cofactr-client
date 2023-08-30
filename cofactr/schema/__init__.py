@@ -15,8 +15,8 @@ from cofactr.schema.flagship_v2 import FlagshipV2Offer, FlagshipV2Part, Flagship
 from cofactr.schema.flagship_v3 import FlagshipV3Offer, FlagshipV3Part, FlagshipV3Seller
 from cofactr.schema.flagship_v4 import FlagshipV4Part, FlagshipV4Offer, FlagshipV4Seller
 from cofactr.schema.flagship_v5 import FlagshipV5Offer, FlagshipV5Part, FlagshipV5Seller
-from cofactr.schema.flagship_v6 import FlagshipV6Offer, FlagshipV6Part
-from cofactr.schema.flagship_v7 import FlagshipV7Part
+from cofactr.schema.flagship_v6 import FlagshipV6Offer, FlagshipV6Part, FlagshipV6Seller
+from cofactr.schema.flagship_v7 import FlagshipV7Offer, FlagshipV7Part
 from cofactr.schema.flagship_alts_v0 import FlagshipAltsV0Part
 from cofactr.schema.flagship_cache_v0 import FlagshipCacheV0Part
 from cofactr.schema.flagship_cache_v1 import FlagshipCacheV1Part
@@ -41,6 +41,7 @@ from cofactr.schema.price_solver_v5 import PriceSolverV5Part
 from cofactr.schema.price_solver_v6 import PriceSolverV6Part
 from cofactr.schema.price_solver_v7 import PriceSolverV7Part
 from cofactr.schema.price_solver_v8 import PriceSolverV8Part
+from cofactr.schema.price_solver_v9 import PriceSolverV9Part
 
 
 class ProductSchemaName(str, Enum):
@@ -74,6 +75,7 @@ class ProductSchemaName(str, Enum):
     PRICE_SOLVER_V6 = "price-solver-v6"
     PRICE_SOLVER_V7 = "price-solver-v7"
     PRICE_SOLVER_V8 = "price-solver-v8"
+    PRICE_SOLVER_V9 = "price-solver-v9"
 
 
 schema_to_product: Dict[ProductSchemaName, Callable] = {
@@ -104,6 +106,7 @@ schema_to_product: Dict[ProductSchemaName, Callable] = {
     ProductSchemaName.PRICE_SOLVER_V6: PriceSolverV6Part,
     ProductSchemaName.PRICE_SOLVER_V7: PriceSolverV7Part,
     ProductSchemaName.PRICE_SOLVER_V8: PriceSolverV8Part,
+    ProductSchemaName.PRICE_SOLVER_V9: PriceSolverV9Part,
 }
 
 
@@ -117,6 +120,7 @@ class OfferSchemaName(str, Enum):
     FLAGSHIP_V4 = "flagship-v4"
     FLAGSHIP_V5 = "flagship-v5"
     FLAGSHIP_V6 = "flagship-v6"
+    FLAGSHIP_V7 = "flagship-v7"
     LOGISTICS = "logistics"
     LOGISTICS_V2 = "logistics-v2"
 
@@ -129,6 +133,7 @@ schema_to_offer: Dict[OfferSchemaName, Callable] = {
     OfferSchemaName.FLAGSHIP_V4: FlagshipV4Offer,
     OfferSchemaName.FLAGSHIP_V5: FlagshipV5Offer,
     OfferSchemaName.FLAGSHIP_V6: FlagshipV6Offer,
+    OfferSchemaName.FLAGSHIP_V7: FlagshipV7Offer,
     OfferSchemaName.LOGISTICS: LogisticsOffer,
     OfferSchemaName.LOGISTICS_V2: LogisticsV2Offer,
 }
@@ -143,6 +148,7 @@ class OrgSchemaName(str, Enum):
     FLAGSHIP_V3 = "flagship-v3"
     FLAGSHIP_V4 = "flagship-v4"
     FLAGSHIP_V5 = "flagship-v5"
+    FLAGSHIP_V6 = "flagship-v6"
     LOGISTICS = "logistics"
     LOGISTICS_V2 = "logistics-v2"
 
@@ -154,6 +160,7 @@ schema_to_org: Dict[OrgSchemaName, Callable] = {
     OrgSchemaName.FLAGSHIP_V3: FlagshipV3Seller,
     OrgSchemaName.FLAGSHIP_V4: FlagshipV4Seller,
     OrgSchemaName.FLAGSHIP_V5: FlagshipV5Seller,
+    OrgSchemaName.FLAGSHIP_V6: FlagshipV6Seller,
     OrgSchemaName.LOGISTICS: FlagshipSeller,
     OrgSchemaName.LOGISTICS_V2: LogisticsV2Seller,
 }
@@ -168,6 +175,7 @@ class SupplierSchemaName(str, Enum):
     FLAGSHIP_V3 = "flagship-v3"
     FLAGSHIP_V4 = "flagship-v4"
     FLAGSHIP_V5 = "flagship-v5"
+    FLAGSHIP_V6 = "flagship-v6"
     LOGISTICS = "logistics"
     LOGISTICS_V2 = "logistics-v2"
 
@@ -179,6 +187,7 @@ schema_to_supplier: Dict[SupplierSchemaName, Callable] = {
     SupplierSchemaName.FLAGSHIP_V3: FlagshipV3Seller,
     SupplierSchemaName.FLAGSHIP_V4: FlagshipV4Seller,
     SupplierSchemaName.FLAGSHIP_V5: FlagshipV5Seller,
+    SupplierSchemaName.FLAGSHIP_V6: FlagshipV6Seller,
     SupplierSchemaName.LOGISTICS: FlagshipSeller,
     SupplierSchemaName.LOGISTICS_V2: LogisticsV2Seller,
 }
