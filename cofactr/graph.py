@@ -33,7 +33,7 @@ from cofactr.schema import (
     schema_to_product,
     schema_to_supplier,
 )
-from cofactr.schema.types import Completion, PartInV0, PartialPartInV0
+from cofactr.schema.types import Completion, OrderInV0, PartInV0, PartialPartInV0
 
 Protocol = Literal["http", "https"]
 
@@ -1168,6 +1168,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         timeout: Optional[int] = None,
         filtering: Optional[List[Dict]] = None,
         owner_id: Optional[str] = None,
+        is_sandbox: bool = False,
     ):
         """Get orders.
 
@@ -1177,6 +1178,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             filtering: Filter orders.
                 Example: `[{"field":"id","operator":"IN","value":["622fb450e4c292d8287b0af5:12345678"]}]`.
             owner_id: Specifies which private data to access.
+            is_sandbox: If True, the order will be executed in a sandbox environment: Real orders
+                will not be queried.
         """
 
         if not schema:
@@ -1196,6 +1199,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "external": True,
                     "schema": schema,
                     "filtering": json.dumps(filtering) if filtering else None,
+                    "is_sandbox": is_sandbox,
                 }
             ),
             timeout=timeout,
@@ -1218,6 +1222,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         schema: Optional[OrderSchemaName] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
+        is_sandbox: bool = False,
     ):
         """Get a batch of orders by IDs.
 
@@ -1226,6 +1231,8 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Specifies which private data to access.
+            is_sandbox: If True, the order will be executed in a sandbox environment: Real orders
+                will not be queried.
         """
 
         if not ids:
@@ -1240,6 +1247,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 filtering=[{"field": "id", "operator": "IN", "value": batched_ids}],
                 timeout=timeout,
                 owner_id=owner_id,
+                is_sandbox=is_sandbox,
             )
             for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
         ]
@@ -1248,3 +1256,49 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         # All order schemas have `id` field.
         return {order.id: order for order in orders_data}
+
+    def create_order(
+        self,
+        data: OrderInV0,
+        timeout: Optional[int] = None,
+        is_sandbox: bool = False,
+    ):
+        """Create order.
+
+        Args:
+            data: Data defining the order to create.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+            is_sandbox: If True, the order will be executed in a sandbox environment: A real order
+                will not be placed.
+
+        Returns:
+            ID of the created order.
+        """
+
+        res = httpx.post(
+            f"{self.url}/orders/",
+            headers=drop_none_values(
+                {
+                    "X-CLIENT-ID": self.client_id,
+                    "X-API-KEY": self.api_key,
+                }
+            ),
+            json=data,
+            params=drop_none_values(
+                {
+                    "is_sandbox": is_sandbox,
+                }
+            ),
+            timeout=timeout,
+            follow_redirects=True,
+        )
+
+        res.raise_for_status()
+
+        location = res.headers.get("location")
+
+        if not location:
+            raise ValueError("No resource location found in order creation response.")
+
+        # Remove `/orders/` to get the ID from the resource path.
+        return location[8:]
