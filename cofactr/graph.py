@@ -1344,7 +1344,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
     ) -> List[str]:
         """Create batch product request job.
 
-        Note: Multiple jobs are created are made if more than 250 IDs are provided.
+        Note: Multiple jobs are created if more than 250 IDs are provided.
 
         Args:
             ids: Cofactr product IDs to match on.
@@ -1412,7 +1412,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             location = res.headers.get("location")
 
             if not location:
-                raise ValueError("No resource location found in order creation response.")
+                raise ValueError("No resource location found in job creation response.")
 
             # Remove `/jobs/` to get the ID from the resource path.
             job_ids.append(location[6:])
