@@ -504,3 +504,26 @@ def test_create_order(data):
     order_id = graph.create_order(data=data, is_sandbox=True)
 
     assert order_id
+
+
+@pytest.mark.parametrize(
+    "ids",
+    [
+        ["RC1SC6UPWJHM"],
+        [],
+    ],
+)
+def test_create_get_products_by_ids_job(ids):
+    """Test creating a 'get products by IDs' job."""
+
+    graph = GraphAPI(
+        client_id=CLIENT_ID,
+        api_key=API_KEY,
+    )
+
+    job_ids = graph.create_get_products_by_ids_job(ids=ids)
+
+    if ids:
+        assert job_ids
+    else:
+        assert not job_ids
