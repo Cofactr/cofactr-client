@@ -1391,8 +1391,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                         {
                             "method": "GET",
                             "relative_url": (
-                                f'?filtering={filtering}&'
-                                + urlencode(invariant_query_params)
+                                f'?filtering={filtering}&{urlencode(invariant_query_params)}'
                             ),
                         }
                         for ids_ in batched(id_batch, n=_MAX_SUB_BATCH_SIZE)
