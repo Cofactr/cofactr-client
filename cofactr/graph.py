@@ -112,7 +112,7 @@ def get_products(
                 "filtering": json.dumps(filtering) if filtering else None,
                 "search_strategy": search_strategy.value,
                 "stale_delta": stale_delta,
-                "reference": reference,
+                "ref": reference,
             }
         ),
         timeout=timeout,
@@ -400,7 +400,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                         for query in query_batch
                     ]
                 },
-                params=drop_none_values({"owner_id": owner_id, "reference": reference}),
+                params=drop_none_values({"owner_id": owner_id, "ref": reference}),
                 timeout=timeout,
                 follow_redirects=True,
             )
@@ -864,7 +864,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "force_refresh": force_refresh,
                     "schema": schema.value,
                     "stale_delta": stale_delta,
-                    "reference": reference,
+                    "ref": reference,
                 }
             ),
             timeout=timeout,
@@ -920,7 +920,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
-            params=drop_none_values({"schema": schema.value, "reference": reference}),
+            params=drop_none_values({"schema": schema.value, "ref": reference}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -974,7 +974,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
-            params=drop_none_values({"reference": reference}),
+            params=drop_none_values({"ref": reference}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -1018,7 +1018,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
-            params=drop_none_values({"reference": reference}),
+            params=drop_none_values({"ref": reference}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -1079,7 +1079,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "force_refresh": force_refresh,
                     "schema": schema.value,
                     "stale_delta": stale_delta,
-                    "reference": reference,
+                    "ref": reference,
                 }
             ),
             timeout=timeout,

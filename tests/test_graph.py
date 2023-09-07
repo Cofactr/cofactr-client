@@ -521,7 +521,7 @@ def test_create_get_products_by_ids_job(ids):
         api_key=API_KEY,
     )
 
-    job_ids = graph.create_get_products_by_ids_job(ids=ids)
+    job_ids = graph.create_get_products_by_ids_job(ids=ids, reference="supply")
 
     if ids:
         assert job_ids
