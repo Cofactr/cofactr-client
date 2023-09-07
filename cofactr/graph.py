@@ -1,5 +1,6 @@
 """Cofactr graph API client."""
 # pylint: disable=too-many-arguments
+# pylint: disable=too-many-locals
 # Python Modules
 from enum import Enum
 import json
@@ -85,6 +86,7 @@ def get_products(
     stale_delta: Optional[str],
     timeout: Optional[int] = None,
     owner_id: Optional[str] = None,
+    reference: Optional[str] = None,
 ) -> httpx.Response:
     """Get products."""
 
@@ -110,6 +112,7 @@ def get_products(
                 "filtering": json.dumps(filtering) if filtering else None,
                 "search_strategy": search_strategy.value,
                 "stale_delta": stale_delta,
+                "reference": reference,
             }
         ),
         timeout=timeout,
@@ -265,6 +268,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         owner_id: Optional[str] = None,
         search_strategy: SearchStrategy = SearchStrategy.DEFAULT,
         stale_delta: Optional[str] = None,
+        reference: Optional[str] = None,
     ):
         """Get products.
 
@@ -288,6 +292,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             stale_delta: How much time has to pass before data is treated as stale. Use "inf" or
                 "infinite" to indicate data should not be refreshed, no matter how old.
                 Examples: "5h", "1d", "1w", "inf"
+            reference: Arbitrary note to associate with the request.
         """
 
         if not schema:
@@ -310,6 +315,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             stale_delta=stale_delta,
             timeout=timeout,
             owner_id=owner_id,
+            reference=reference,
         )
 
         extracted_products = res.json()
@@ -340,6 +346,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         owner_id: Optional[str] = None,
         search_strategy: SearchStrategy = SearchStrategy.DEFAULT,
         stale_delta: Optional[str] = None,
+        reference: Optional[str] = None,
     ):
         """Search for products associated with each query.
 
@@ -355,6 +362,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             stale_delta: How much time has to pass before data is treated as stale. Use "inf" or
                 "infinite" to indicate data should not be refreshed, no matter how old.
                 Examples: "5h", "1d", "1w", "inf"
+            reference: Arbitrary note to associate with the request.
 
         Returns:
             A dictionary mapping each MPN to a list of matching products.
@@ -392,7 +400,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                         for query in query_batch
                     ]
                 },
-                params=drop_none_values({"owner_id": owner_id}),
+                params=drop_none_values({"owner_id": owner_id, "reference": reference}),
                 timeout=timeout,
                 follow_redirects=True,
             )
@@ -430,6 +438,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
         stale_delta: Optional[str] = None,
+        reference: Optional[str] = None,
     ):
         """Get a batch of products by IDs.
 
@@ -446,6 +455,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             stale_delta: How much time has to pass before data is treated as stale. Use "inf" or
                 "infinite" to indicate data should not be refreshed, no matter how old.
                 Examples: "5h", "1d", "1w", "inf"
+            reference: Arbitrary note to associate with the request.
         """
 
         if not ids:
@@ -464,6 +474,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 timeout=timeout,
                 owner_id=owner_id,
                 stale_delta=stale_delta,
+                reference=reference,
             )
             for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
         ]
@@ -489,6 +500,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         ids: List[str],
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
+        reference: Optional[str] = None,
     ):
         """Get the canonical product ID for each of the given IDs, which may or may not be
         deprecated.
@@ -507,6 +519,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 limit=_MAX_BATCH_SIZE,
                 timeout=timeout,
                 owner_id=owner_id,
+                reference=reference,
             )
             for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
         ]
@@ -811,6 +824,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
         stale_delta: Optional[str] = None,
+        reference: Optional[str] = None,
     ):
         """Get product.
 
@@ -828,6 +842,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             stale_delta: How much time has to pass before data is treated as stale. Use "inf" or
                 "infinite" to indicate data should not be refreshed, no matter how old.
                 Examples: "5h", "1d", "1w", "inf"
+            reference: Arbitrary note to associate with the request.
         """
 
         if not schema:
@@ -849,6 +864,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "force_refresh": force_refresh,
                     "schema": schema.value,
                     "stale_delta": stale_delta,
+                    "reference": reference,
                 }
             ),
             timeout=timeout,
@@ -878,6 +894,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         data: PartInV0,
         schema: Optional[ProductSchemaName] = None,
         timeout: Optional[int] = None,
+        reference: Optional[str] = None,
     ):
         """Create product.
 
@@ -885,6 +902,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             data: Data defining the product to create.
             schema: Response schema.
             timeout: Time to wait (in seconds) for the server to issue a response.
+            reference: Arbitrary note to associate with the request.
 
         Returns:
             The newly created product, represented in the given schema.
@@ -902,7 +920,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
-            params=drop_none_values({"schema": schema.value}),
+            params=drop_none_values({"schema": schema.value, "reference": reference}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -931,6 +949,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         data: PartialPartInV0,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
+        reference: Optional[str] = None,
     ):
         """Update product.
 
@@ -939,6 +958,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             data: Data defining product updates. A value of `None` represents delete.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Data owner ID.
+            reference: Arbitrary note to associate with the request.
         """
 
         res = httpx.patch(
@@ -954,6 +974,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
+            params=drop_none_values({"reference": reference}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -971,6 +992,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         id_to_custom_id: Dict[str, Optional[str]],
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
+        reference: Optional[str] = None,
     ):
         """Set custom product IDs.
 
@@ -978,6 +1000,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             id_to_custom_id: Map from Cofactr product ID to desired custom ID.
             timeout: Time to wait (in seconds) for the server to issue a response.
             owner_id: Data owner ID.
+            reference: Arbitrary note to associate with the request.
         """
 
         if not id_to_custom_id:
@@ -995,6 +1018,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
+            params=drop_none_values({"reference": reference}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -1017,6 +1041,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
         stale_delta: Optional[str] = None,
+        reference: Optional[str] = None,
     ):
         """Get product.
 
@@ -1032,6 +1057,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             stale_delta: How much time has to pass before data is treated as stale. Use "inf" or
                 "infinite" to indicate data should not be refreshed, no matter how old.
                 Examples: "5h", "1d", "1w", "inf"
+            reference: Arbitrary note to associate with the request.
         """
 
         if not schema:
@@ -1053,6 +1079,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "force_refresh": force_refresh,
                     "schema": schema.value,
                     "stale_delta": stale_delta,
+                    "reference": reference,
                 }
             ),
             timeout=timeout,
