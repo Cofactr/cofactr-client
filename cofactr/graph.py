@@ -5,7 +5,7 @@
 from enum import Enum
 import json
 from typing import Any, Dict, List, Literal, NamedTuple, Optional
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 # 3rd Party Modules
 import httpx
@@ -39,6 +39,7 @@ from cofactr.schema.types import Completion, OrderInV0, PartInV0, PartialPartInV
 Protocol = Literal["http", "https"]
 
 _MAX_BATCH_SIZE = 250
+_MAX_SUB_BATCH_SIZE = 25
 
 
 class SearchStrategy(str, Enum):
@@ -111,7 +112,7 @@ def get_products(
                 "filtering": json.dumps(filtering) if filtering else None,
                 "search_strategy": search_strategy.value,
                 "stale_delta": stale_delta,
-                "reference": reference,
+                "ref": reference,
             }
         ),
         timeout=timeout,
@@ -399,7 +400,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                         for query in query_batch
                     ]
                 },
-                params=drop_none_values({"owner_id": owner_id, "reference": reference}),
+                params=drop_none_values({"owner_id": owner_id, "ref": reference}),
                 timeout=timeout,
                 follow_redirects=True,
             )
@@ -863,7 +864,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "force_refresh": force_refresh,
                     "schema": schema.value,
                     "stale_delta": stale_delta,
-                    "reference": reference,
+                    "ref": reference,
                 }
             ),
             timeout=timeout,
@@ -919,7 +920,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
-            params=drop_none_values({"schema": schema.value, "reference": reference}),
+            params=drop_none_values({"schema": schema.value, "ref": reference}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -973,7 +974,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
-            params=drop_none_values({"reference": reference}),
+            params=drop_none_values({"ref": reference}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -1017,7 +1018,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
-            params=drop_none_values({"reference": reference}),
+            params=drop_none_values({"ref": reference}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -1078,7 +1079,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "force_refresh": force_refresh,
                     "schema": schema.value,
                     "stale_delta": stale_delta,
-                    "reference": reference,
+                    "ref": reference,
                 }
             ),
             timeout=timeout,
@@ -1329,3 +1330,90 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         # Remove `/orders/` to get the ID from the resource path.
         return location[8:]
+
+    def create_get_products_by_ids_job(
+        self,
+        ids: List[str],
+        external: Optional[bool] = True,
+        force_refresh: bool = False,
+        schema: Optional[ProductSchemaName] = None,
+        timeout: Optional[int] = None,
+        owner_id: Optional[str] = None,
+        stale_delta: Optional[str] = None,
+        reference: Optional[str] = None,
+    ) -> List[str]:
+        """Create batch product request job.
+
+        Note: Multiple jobs are created if more than 250 IDs are provided.
+
+        Args:
+            ids: Cofactr product IDs to match on.
+            external: Whether to query external sources in order to refresh data if applicable.
+            force_refresh: Whether to force re-ingestion from external sources. Overrides
+                `external`.
+            schema: Response schema.
+            timeout: Time to wait (in seconds) for the server to issue a response.
+            owner_id: Specifies which private data to access.
+            stale_delta: How much time has to pass before data is treated as stale. Use "inf" or
+                "infinite" to indicate data should not be refreshed, no matter how old.
+                Examples: "5h", "1d", "1w", "inf"
+            reference: Arbitrary note to associate with the request.
+
+        Returns:
+            A list with one ID for each job that was created.
+        """
+
+        if not schema:
+            schema = self.default_product_schema
+
+        invariant_query_params = drop_none_values(
+            {
+                "schema": schema.value,
+                "external": bool(external),
+                "force_refresh": force_refresh,
+                "stale_delta": stale_delta,
+            }
+        )
+
+        job_ids = []
+
+        for id_batch in batched(ids, n=_MAX_BATCH_SIZE):
+            res = httpx.post(
+                f"{self.url}/jobs/batch-products-requests/",
+                headers=drop_none_values(
+                    {
+                        "X-CLIENT-ID": self.client_id,
+                        "X-API-KEY": self.api_key,
+                    }
+                ),
+                json={
+                    "batch": [
+                        {
+                            "method": "GET",
+                            "relative_url": (
+                                f'?filtering={filtering}&{urlencode(invariant_query_params)}'
+                            ),
+                        }
+                        for ids_ in batched(id_batch, n=_MAX_SUB_BATCH_SIZE)
+                        if (
+                            filtering := quote(
+                                json.dumps([{"field": "id", "operator": "IN", "value": ids_}])
+                            )
+                        )
+                    ]
+                },
+                params=drop_none_values({"owner_id": owner_id, "ref": reference}),
+                timeout=timeout,
+                follow_redirects=True,
+            )
+            res.raise_for_status()
+
+            location = res.headers.get("location")
+
+            if not location:
+                raise ValueError("No resource location found in job creation response.")
+
+            # Remove `/jobs/` to get the ID from the resource path.
+            job_ids.append(location[6:])
+
+        return job_ids
