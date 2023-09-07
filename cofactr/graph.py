@@ -1385,7 +1385,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             location = res.headers.get("location")
 
             if not location:
-                raise ValueError("No resource location found in order creation response.")
+                raise ValueError("No resource location found in job creation response.")
 
             # Remove `/jobs/` to get the ID from the resource path.
             job_ids.append(location[6:])
