@@ -177,3 +177,20 @@ class OrderInV0(TypedDict):
     # Shipping methods in order of preference (Example: `["FedEx Ground"]`).
     shipping_methods: List[str]
     order_lines: List[OrderLineInV0]
+
+
+class PricePoint(TypedDict):
+    """Price in a specific currency + quantity."""
+
+    # Minimum purchase quantity to get this price (aka price break).
+    quantity: NotRequired[int]
+    # Price in currency.
+    price: NotRequired[float]
+    # Currency for price.
+    currency: NotRequired[str]
+    # Currency for converted_price. Will match value of currency argument.
+    converted_currency: NotRequired[str]
+    # Price converted to user's currency using foreign exchange rates.
+    converted_price: NotRequired[float]
+    # The exchange rate used to calculate converted_price.
+    conversion_rate: NotRequired[float]
