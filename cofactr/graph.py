@@ -4,7 +4,7 @@
 # Python Modules
 from enum import Enum
 import json
-from typing import Any, Dict, List, Literal, NamedTuple, Optional
+from typing import Any, Dict, List, Literal, NamedTuple, Optional, Union
 from urllib.parse import quote, urlencode
 
 # 3rd Party Modules
@@ -21,7 +21,6 @@ from tenacity import (
 )
 
 # Local Modules
-from cofactr.helpers import parse_entities
 from cofactr.schema import (
     OfferSchemaName,
     OrderSchemaName,
@@ -40,6 +39,7 @@ Protocol = Literal["http", "https"]
 
 _MAX_BATCH_SIZE = 250
 _MAX_SUB_BATCH_SIZE = 25
+_REQUIRED_FIELDS = ["id", "deprecated_ids"]
 
 
 class SearchStrategy(str, Enum):
@@ -67,6 +67,18 @@ class RetrySettings(NamedTuple):
     )
     stop: stop_after_attempt = stop_after_attempt(3)
     wait: wait_chain = wait_chain(*[wait_fixed(wait=wait) for wait in [1, 3, 5]])
+
+
+def _get_ids_from_dict(entity):
+    """Get IDs from dictionary."""
+
+    return [entity["id"], *(entity.get("deprecated_ids") or [])]
+
+
+def _get_ids_from_class(entity):
+    """Get IDs from class."""
+
+    return [entity.id, *(getattr(entity, "deprecated_ids", None) or [])]
 
 
 def get_products(
@@ -225,11 +237,15 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         self,
         protocol: Optional[Protocol] = PROTOCOL,
         host: Optional[str] = HOST,
-        default_product_schema: ProductSchemaName = ProductSchemaName.FLAGSHIP,
-        default_order_schema: OrderSchemaName = OrderSchemaName.FLAGSHIP,
-        default_org_schema: OrgSchemaName = OrgSchemaName.FLAGSHIP,
-        default_offer_schema: OfferSchemaName = OfferSchemaName.FLAGSHIP,
-        default_supplier_schema: SupplierSchemaName = SupplierSchemaName.FLAGSHIP,
+        default_product_schema: Union[
+            ProductSchemaName, str
+        ] = ProductSchemaName.FLAGSHIP,
+        default_order_schema: Union[OrderSchemaName, str] = OrderSchemaName.FLAGSHIP,
+        default_org_schema: Union[OrgSchemaName, str] = OrgSchemaName.FLAGSHIP,
+        default_offer_schema: Union[OfferSchemaName, str] = OfferSchemaName.FLAGSHIP,
+        default_supplier_schema: Union[
+            SupplierSchemaName, str
+        ] = SupplierSchemaName.FLAGSHIP,
         client_id: Optional[str] = None,
         api_key: Optional[str] = None,
     ):
@@ -266,7 +282,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         limit: Optional[int] = None,
         external: Optional[bool] = True,
         force_refresh: bool = False,
-        schema: Optional[ProductSchemaName] = None,
+        schema: Optional[Union[ProductSchemaName, str]] = None,
         filtering: Optional[List[Dict]] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
@@ -304,6 +320,19 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_product_schema
 
+        schema_class: Optional[ProductSchemaName] = (
+            schema if isinstance(schema, ProductSchemaName) else None
+        )
+
+        if (schema_class and fields) and (
+            schema_class is not ProductSchemaName.INTERNAL
+        ):
+            raise ValueError(
+                "Field expansion is not supported for the targeted schema."
+            )
+
+        schema_value = schema_class.value if schema_class else schema
+
         res = get_products(
             url=self.url,
             client_id=self.client_id,
@@ -315,7 +344,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             before=before,
             after=after,
             limit=limit,
-            schema=schema.value,
+            schema=schema_value,
             filtering=filtering,
             search_strategy=search_strategy,
             stale_delta=stale_delta,
@@ -326,14 +355,16 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         )
 
         extracted_products = res.json()
+        res_data = extracted_products and extracted_products.get("data")
 
-        # Handle schemas that have parsers.
-        Product = schema_to_product.get(schema)  # pylint: disable=invalid-name
+        if res_data and schema_class:
+            # Handle schemas that have parsers.
+            Product = schema_to_product.get(  # pylint: disable=invalid-name
+                schema_class
+            )
 
-        if Product:
-            extracted_products["data"] = [
-                Product(**data) for data in extracted_products["data"]
-            ]
+            if Product:
+                extracted_products["data"] = [Product(**data) for data in res_data]
 
         return extracted_products
 
@@ -348,13 +379,14 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         queries: List[str],
         external: bool = True,
         force_refresh: bool = False,
-        schema: Optional[ProductSchemaName] = None,
+        schema: Optional[Union[ProductSchemaName, str]] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
         search_strategy: SearchStrategy = SearchStrategy.DEFAULT,
         stale_delta: Optional[str] = None,
         reference: Optional[str] = None,
         options: Optional[Dict] = None,
+        fields: Optional[str] = None,
     ):
         """Search for products associated with each query.
 
@@ -372,6 +404,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 Examples: "5h", "1d", "1w", "inf"
             reference: Arbitrary note to associate with the request.
             options: Extra configuration options.
+            fields: Used to filter properties that the response should contain. A field can be a
+                concrete property like "mpn" or an abstract group of properties like "assembly".
+                Example: `"id,aliases,labels,statements{spec,assembly},offers"`.
 
         Returns:
             A dictionary mapping each MPN to a list of matching products.
@@ -383,9 +418,31 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_product_schema
 
+        schema_class: Optional[ProductSchemaName] = (
+            schema if isinstance(schema, ProductSchemaName) else None
+        )
+
+        if (schema_class and fields) and (
+            schema_class is not ProductSchemaName.INTERNAL
+        ):
+            raise ValueError(
+                "Field expansion is not supported for the targeted schema."
+            )
+
+        schema_value = schema_class.value if schema_class else schema
+
         options = options or {}
 
-        stale_delta_param = f"&stale_delta={stale_delta}" if stale_delta else ""
+        invariant_query_params = drop_none_values(
+            {
+                "schema": schema_value,
+                "external": bool(external),
+                "force_refresh": force_refresh,
+                "stale_delta": stale_delta,
+                "fields": fields,
+                "search_strategy": search_strategy.value,
+            }
+        )
 
         query_to_products: Dict[str, Any] = {}
 
@@ -403,9 +460,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                         {
                             "method": "GET",
                             "relative_url": (
-                                f"?q={quote(query)}&schema={schema.value}&external={bool(external)}"
-                                f"&force_refresh={force_refresh}{stale_delta_param}"
-                                f"&search_strategy={search_strategy.value}"
+                                f"?q={quote(query)}&{urlencode(invariant_query_params)}"
                             ),
                         }
                         for query in query_batch
@@ -422,17 +477,22 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
             responses = res.json()
 
-            Product = schema_to_product[schema]  # pylint: disable=invalid-name
+            if isinstance(responses, list):
+                for query, response in zip(query_batch, responses):
+                    matches = []
 
-            for query, response in zip(query_batch, responses):
-                matches = []
+                    if response["code"] == 200:
+                        matches = response["body"]["data"]
 
-                if response["code"] == 200:
-                    data = response["body"]["data"]
+                    query_to_products[query] = matches
 
-                    matches = [Product(**product_data) for product_data in data]
+        if schema_class:
+            Product = schema_to_product[schema_class]  # pylint: disable=invalid-name
 
-                query_to_products[query] = matches
+            for query, products in query_to_products.items():
+                query_to_products[query] = [
+                    Product(**product_data) for product_data in products
+                ]
 
         return query_to_products
 
@@ -447,12 +507,13 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         ids: List[str],
         external: Optional[bool] = True,
         force_refresh: bool = False,
-        schema: Optional[ProductSchemaName] = None,
+        schema: Optional[Union[ProductSchemaName, str]] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
         stale_delta: Optional[str] = None,
         reference: Optional[str] = None,
         options: Optional[Dict] = None,
+        fields: Optional[str] = None,
     ):
         """Get a batch of products by IDs.
 
@@ -471,6 +532,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 Examples: "5h", "1d", "1w", "inf"
             reference: Arbitrary note to associate with the request.
             options: Extra configuration options.
+            fields: Used to filter properties that the response should contain. A field can be a
+                concrete property like "mpn" or an abstract group of properties like "assembly".
+                Example: `"id,aliases,labels,statements{spec,assembly},offers"`.
         """
 
         if not ids:
@@ -478,6 +542,25 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         if not schema:
             schema = self.default_product_schema
+
+        schema_class: Optional[ProductSchemaName] = (
+            schema if isinstance(schema, ProductSchemaName) else None
+        )
+
+        if (schema_class and fields) and (
+            schema_class is not ProductSchemaName.INTERNAL
+        ):
+            raise ValueError(
+                "Field expansion is not supported for the targeted schema."
+            )
+
+        # schema_value = schema_class.value if schema_class else schema
+        parsed_fields = fields.split(",") if fields else []
+
+        if fields:
+            for required_field in _REQUIRED_FIELDS:
+                if required_field not in parsed_fields:
+                    fields = f"{required_field},{fields}"
 
         batched_products = [
             self.get_products(
@@ -491,19 +574,34 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 stale_delta=stale_delta,
                 reference=reference,
                 options=options,
+                fields=fields,
             )
             for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
         ]
 
-        products_data = list(flatten([res["data"] for res in batched_products]))
+        products = list(flatten([res["data"] for res in batched_products]))
 
-        id_to_product = parse_entities(
-            ids=ids,
-            entities=products_data,
-            entity_dataclass=schema_to_product[schema],
-        )
+        get_ids = _get_ids_from_class if schema_class else _get_ids_from_dict
 
-        return id_to_product
+        id_to_product = {
+            id_: product for product in products for id_ in get_ids(entity=product)
+        }
+        target_id_to_product = {
+            id_: id_to_product[id_] for id_ in ids if id_ in id_to_product
+        }
+
+        fields_to_drop = [
+            required_field
+            for required_field in _REQUIRED_FIELDS
+            if required_field not in parsed_fields
+        ]
+
+        if not schema_class:
+            for field in fields_to_drop:
+                for _, product in target_id_to_product.items():
+                    product.pop(field, None)
+
+        return target_id_to_product
 
     @retry(
         reraise=retry_settings.reraise,
@@ -567,7 +665,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         before: Optional[str] = None,
         after: Optional[str] = None,
         limit: Optional[int] = None,
-        schema: Optional[OrgSchemaName] = None,
+        schema: Optional[Union[OrgSchemaName, str]] = None,
         timeout: Optional[int] = None,
         filtering: Optional[List[Dict]] = None,
         owner_id: Optional[str] = None,
@@ -589,6 +687,11 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_org_schema
 
+        schema_class: Optional[OrgSchemaName] = (
+            schema if isinstance(schema, OrgSchemaName) else None
+        )
+        schema_value = schema_class.value if schema_class else schema
+
         res = get_orgs(
             url=self.url,
             client_id=self.client_id,
@@ -597,17 +700,19 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             before=before,
             after=after,
             limit=limit,
-            schema=schema.value,
+            schema=schema_value,
             timeout=timeout,
             filtering=filtering,
             owner_id=owner_id,
         )
 
         res_json = res.json()
+        res_data = res_json and res_json.get("data")
 
-        Org = schema_to_org[schema]  # pylint: disable=invalid-name
+        if res_data and schema_class:
+            Org = schema_to_org[schema_class]  # pylint: disable=invalid-name
 
-        res_json["data"] = [Org(**data) for data in res_json["data"]]
+            res_json["data"] = [Org(**data) for data in res_data]
 
         return res_json
 
@@ -623,7 +728,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         before: Optional[str] = None,
         after: Optional[str] = None,
         limit: Optional[int] = None,
-        schema: Optional[SupplierSchemaName] = None,
+        schema: Optional[Union[SupplierSchemaName, str]] = None,
         timeout: Optional[int] = None,
         filtering: Optional[List[Dict]] = None,
         owner_id: Optional[str] = None,
@@ -645,6 +750,11 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_supplier_schema
 
+        schema_class: Optional[SupplierSchemaName] = (
+            schema if isinstance(schema, SupplierSchemaName) else None
+        )
+        schema_value = schema_class.value if schema_class else schema
+
         res = get_suppliers(
             url=self.url,
             client_id=self.client_id,
@@ -653,17 +763,19 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             before=before,
             after=after,
             limit=limit,
-            schema=schema.value,
+            schema=schema_value,
             timeout=timeout,
             filtering=filtering,
             owner_id=owner_id,
         )
 
         res_json = res.json()
+        res_data = res_json and res_json.get("data")
 
-        Supplier = schema_to_supplier[schema]  # pylint: disable=invalid-name
+        if res_data and schema_class:
+            Supplier = schema_to_supplier[schema_class]  # pylint: disable=invalid-name
 
-        res_json["data"] = [Supplier(**data) for data in res_json["data"]]
+            res_json["data"] = [Supplier(**data) for data in res_data]
 
         return res_json
 
@@ -676,7 +788,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
     def get_suppliers_by_ids(
         self,
         ids: List[str],
-        schema: Optional[SupplierSchemaName] = None,
+        schema: Optional[Union[SupplierSchemaName, str]] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
     ):
@@ -697,6 +809,10 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_supplier_schema
 
+        schema_class: Optional[SupplierSchemaName] = (
+            schema if isinstance(schema, SupplierSchemaName) else None
+        )
+
         batched_suppliers = [
             self.get_suppliers(
                 schema=schema,
@@ -708,17 +824,20 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
         ]
 
-        suppliers_data = list(
+        suppliers = list(
             flatten([suppliers["data"] for suppliers in batched_suppliers])
         )
 
-        id_to_supplier = parse_entities(
-            ids=ids,
-            entities=suppliers_data,
-            entity_dataclass=schema_to_supplier[schema],
-        )
+        get_ids = _get_ids_from_class if schema_class else _get_ids_from_dict
 
-        return id_to_supplier
+        id_to_supplier = {
+            id_: supplier for supplier in suppliers for id_ in get_ids(entity=supplier)
+        }
+        target_id_to_supplier = {
+            id_: id_to_supplier[id_] for id_ in ids if id_ in id_to_supplier
+        }
+
+        return target_id_to_supplier
 
     @retry(
         reraise=retry_settings.reraise,
@@ -838,7 +957,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         fields: Optional[str] = None,
         external: Optional[bool] = True,
         force_refresh: bool = False,
-        schema: Optional[ProductSchemaName] = None,
+        schema: Optional[Union[ProductSchemaName, str]] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
         stale_delta: Optional[str] = None,
@@ -868,6 +987,19 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_product_schema
 
+        schema_class: Optional[ProductSchemaName] = (
+            schema if isinstance(schema, ProductSchemaName) else None
+        )
+
+        if (schema_class and fields) and (
+            schema_class is not ProductSchemaName.INTERNAL
+        ):
+            raise ValueError(
+                "Field expansion is not supported for the targeted schema."
+            )
+
+        schema_value = schema_class.value if schema_class else schema
+
         options = options or {}
 
         res = httpx.get(
@@ -884,7 +1016,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "fields": fields,
                     "external": external,
                     "force_refresh": force_refresh,
-                    "schema": schema.value,
+                    "schema": schema_value,
                     "stale_delta": stale_delta,
                     "ref": reference,
                     **options,
@@ -897,12 +1029,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         res.raise_for_status()
 
         res_json = res.json()
+        res_data = res_json and res_json.get("data")
 
-        Product = schema_to_product[schema]  # pylint: disable=invalid-name
+        if res_data and schema_class:
+            Product = schema_to_product[schema_class]  # pylint: disable=invalid-name
 
-        res_json["data"] = (
-            Product(**res_json["data"]) if (res_json and res_json.get("data")) else None
-        )
+            res_json["data"] = Product(**res_data)
 
         return res_json
 
@@ -915,10 +1047,11 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
     def create_product(
         self,
         data: PartInV0,
-        schema: Optional[ProductSchemaName] = None,
+        schema: Optional[Union[ProductSchemaName, str]] = None,
         timeout: Optional[int] = None,
         reference: Optional[str] = None,
         options: Optional[Dict] = None,
+        fields: Optional[str] = None,
     ):
         """Create product.
 
@@ -928,6 +1061,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             timeout: Time to wait (in seconds) for the server to issue a response.
             reference: Arbitrary note to associate with the request.
             options: Extra configuration options.
+            fields: Used to filter properties that the response should contain. A field can be a
+                concrete property like "mpn" or an abstract group of properties like "assembly".
+                Example: "id,aliases,labels,statements{spec,assembly},offers"
 
         Returns:
             The newly created product, represented in the given schema.
@@ -935,6 +1071,19 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         if not schema:
             schema = self.default_product_schema
+
+        schema_class: Optional[ProductSchemaName] = (
+            schema if isinstance(schema, ProductSchemaName) else None
+        )
+
+        if (schema_class and fields) and (
+            schema_class is not ProductSchemaName.INTERNAL
+        ):
+            raise ValueError(
+                "Field expansion is not supported for the targeted schema."
+            )
+
+        schema_value = schema_class.value if schema_class else schema
 
         options = options or {}
 
@@ -948,7 +1097,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 }
             ),
             params=drop_none_values(
-                {"schema": schema.value, "ref": reference, **options}
+                {"schema": schema_value, "fields": fields, "ref": reference, **options}
             ),
             timeout=timeout,
             follow_redirects=True,
@@ -957,12 +1106,14 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         res.raise_for_status()
 
         res_json = res.json()
+        res_data = res_json and res_json.get("data")
 
-        Product = schema_to_product[schema]  # pylint: disable=invalid-name
+        if res_data and schema_class:
+            Product = schema_to_product[schema_class]  # pylint: disable=invalid-name
 
-        res_json["data"] = (
-            Product(**res_json["data"]) if (res_json and res_json.get("data")) else None
-        )
+            res_json["data"] = (
+                Product(**res_json["data"]) if (res_json and res_data) else None
+            )
 
         return res_json
 
@@ -1074,7 +1225,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         fields: Optional[str] = None,
         external: Optional[bool] = True,
         force_refresh: bool = False,
-        schema: Optional[OfferSchemaName] = None,
+        schema: Optional[Union[OfferSchemaName, str]] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
         stale_delta: Optional[str] = None,
@@ -1104,6 +1255,17 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         options = options or {}
 
+        schema_class: Optional[OfferSchemaName] = (
+            schema if isinstance(schema, OfferSchemaName) else None
+        )
+
+        if (schema_class and fields) and (schema_class is not OfferSchemaName.INTERNAL):
+            raise ValueError(
+                "Field expansion is not supported for the targeted schema."
+            )
+
+        schema_value = schema_class.value if schema_class else schema
+
         res = httpx.get(
             f"{self.url}/products/{product_id}/offers",
             headers=drop_none_values(
@@ -1118,7 +1280,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "fields": fields,
                     "external": external,
                     "force_refresh": force_refresh,
-                    "schema": schema.value,
+                    "schema": schema_value,
                     "stale_delta": stale_delta,
                     "ref": reference,
                     **options,
@@ -1131,10 +1293,12 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         res.raise_for_status()
 
         res_json = res.json()
+        res_data = res_json and res_json.get("data")
 
-        Offer = schema_to_offer[schema]  # pylint: disable=invalid-name
+        if res_json and schema_class:
+            Offer = schema_to_offer[schema_class]  # pylint: disable=invalid-name
 
-        res_json["data"] = [Offer(**data) for data in res_json["data"]]
+            res_json["data"] = [Offer(**data) for data in res_data]
 
         return res_json
 
@@ -1147,7 +1311,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
     def get_org(
         self,
         id: str,
-        schema: Optional[OrgSchemaName] = None,
+        schema: Optional[Union[OrgSchemaName, str]] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
     ):
@@ -1155,6 +1319,11 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         if not schema:
             schema = self.default_org_schema
+
+        schema_class: Optional[OrgSchemaName] = (
+            schema if isinstance(schema, OrgSchemaName) else None
+        )
+        schema_value = schema_class.value if schema_class else schema
 
         res = httpx.get(
             f"{self.url}/orgs/{id}",
@@ -1164,7 +1333,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
-            params=drop_none_values({"owner_id": owner_id, "schema": schema.value}),
+            params=drop_none_values({"owner_id": owner_id, "schema": schema_value}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -1172,12 +1341,14 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         res.raise_for_status()
 
         res_json = res.json()
+        res_data = res_json and res_json.get("data")
 
-        Org = schema_to_org[schema]  # pylint: disable=invalid-name
+        if res_json and schema_class:
+            Org = schema_to_org[schema_class]  # pylint: disable=invalid-name
 
-        res_json["data"] = (
-            Org(**res_json["data"]) if (res_json and res_json.get("data")) else None
-        )
+            res_json["data"] = (
+                Org(**res_json["data"]) if (res_json and res_data) else None
+            )
 
         return res_json
 
@@ -1190,7 +1361,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
     def get_supplier(
         self,
         id: str,
-        schema: Optional[SupplierSchemaName] = None,
+        schema: Optional[Union[SupplierSchemaName, str]] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
     ):
@@ -1198,6 +1369,11 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
 
         if not schema:
             schema = self.default_supplier_schema
+
+        schema_class: Optional[SupplierSchemaName] = (
+            schema if isinstance(schema, SupplierSchemaName) else None
+        )
+        schema_value = schema_class.value if schema_class else schema
 
         res = httpx.get(
             f"{self.url}/orgs/{id}",
@@ -1207,7 +1383,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                     "X-API-KEY": self.api_key,
                 }
             ),
-            params=drop_none_values({"owner_id": owner_id, "schema": schema.value}),
+            params=drop_none_values({"owner_id": owner_id, "schema": schema_value}),
             timeout=timeout,
             follow_redirects=True,
         )
@@ -1215,14 +1391,16 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         res.raise_for_status()
 
         res_json = res.json()
+        res_data = res_json and res_json.get("data")
 
-        Supplier = schema_to_supplier[schema]  # pylint: disable=invalid-name
+        if res_data and schema_class:
+            Supplier = schema_to_supplier[schema_class]  # pylint: disable=invalid-name
 
-        res_json["data"] = (
-            Supplier(**res_json["data"])
-            if (res_json and res_json.get("data"))
-            else None
-        )
+            res_json["data"] = (
+                Supplier(**res_json["data"])
+                if (res_json and res_json.get("data"))
+                else None
+            )
 
         return res_json
 
@@ -1234,7 +1412,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
     )
     def get_orders(
         self,
-        schema: Optional[OrderSchemaName] = None,
+        schema: Optional[Union[OrderSchemaName, str]] = None,
         timeout: Optional[int] = None,
         filtering: Optional[List[Dict]] = None,
         owner_id: Optional[str] = None,
@@ -1255,6 +1433,11 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_order_schema
 
+        schema_class: Optional[OrderSchemaName] = (
+            schema if isinstance(schema, OrderSchemaName) else None
+        )
+        schema_value = schema_class.value if schema_class else schema
+
         res = httpx.get(
             f"{self.url}/orders/",
             headers=drop_none_values(
@@ -1267,7 +1450,7 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 {
                     "owner_id": owner_id,
                     "external": True,
-                    "schema": schema,
+                    "schema": schema_value,
                     "filtering": json.dumps(filtering) if filtering else None,
                     "is_sandbox": is_sandbox,
                 }
@@ -1279,17 +1462,19 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         res.raise_for_status()
 
         res_json = res.json()
+        res_data = res_json.get("data")
 
-        Order = schema_to_order[schema]  # pylint: disable=invalid-name
+        if res_data and schema_class:
+            Order = schema_to_order[schema_class]  # pylint: disable=invalid-name
 
-        res_json["data"] = [Order(**data) for data in res_json["data"]]
+            res_json["data"] = [Order(**data) for data in res_data]
 
         return res_json
 
     def get_orders_by_ids(
         self,
         ids: List[str],
-        schema: Optional[OrderSchemaName] = None,
+        schema: Optional[Union[OrderSchemaName, str]] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
         is_sandbox: bool = False,
@@ -1311,6 +1496,10 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_order_schema
 
+        schema_class: Optional[OrderSchemaName] = (
+            schema if isinstance(schema, OrderSchemaName) else None
+        )
+
         batched_orders = [
             self.get_orders(
                 schema=schema,
@@ -1322,10 +1511,16 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
             for batched_ids in batched(ids, n=_MAX_BATCH_SIZE)
         ]
 
-        orders_data = list(flatten([res["data"] for res in batched_orders]))
+        orders = list(flatten([res["data"] for res in batched_orders]))
 
-        # All order schemas have `id` field.
-        return {order.id: order for order in orders_data}
+        get_ids = _get_ids_from_class if schema_class else _get_ids_from_dict
+
+        id_to_order = {id_: order for order in orders for id_ in get_ids(entity=order)}
+        target_id_to_order = {
+            id_: id_to_order[id_] for id_ in ids if id_ in id_to_order
+        }
+
+        return target_id_to_order
 
     def create_order(
         self,
@@ -1378,12 +1573,13 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         ids: List[str],
         external: Optional[bool] = True,
         force_refresh: bool = False,
-        schema: Optional[ProductSchemaName] = None,
+        schema: Optional[Union[ProductSchemaName, str]] = None,
         timeout: Optional[int] = None,
         owner_id: Optional[str] = None,
         stale_delta: Optional[str] = None,
         reference: Optional[str] = None,
         options: Optional[dict] = None,
+        fields: Optional[str] = None,
     ) -> List[str]:
         """Create batch product request job.
 
@@ -1402,6 +1598,9 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
                 Examples: "5h", "1d", "1w", "inf"
             reference: Arbitrary note to associate with the request.
             options: Extra configuration options.
+            fields: Used to filter properties that the response should contain. A field can be a
+                concrete property like "mpn" or an abstract group of properties like "assembly".
+                Example: "id,aliases,labels,statements{spec,assembly},offers"
 
         Returns:
             A list with one ID for each job that was created.
@@ -1410,14 +1609,28 @@ class GraphAPI:  # pylint: disable=too-many-instance-attributes
         if not schema:
             schema = self.default_product_schema
 
+        schema_class: Optional[ProductSchemaName] = (
+            schema if isinstance(schema, ProductSchemaName) else None
+        )
+
+        if (schema_class and fields) and (
+            schema_class is not ProductSchemaName.INTERNAL
+        ):
+            raise ValueError(
+                "Field expansion is not supported for the targeted schema."
+            )
+
+        schema_value = schema_class.value if schema_class else schema
+
         options = options or {}
 
         invariant_query_params = drop_none_values(
             {
-                "schema": schema.value,
+                "schema": schema_value,
                 "external": bool(external),
                 "force_refresh": force_refresh,
                 "stale_delta": stale_delta,
+                "fields": fields,
             }
         )
 

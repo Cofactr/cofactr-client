@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from typing import List, Literal, Optional
 
 # Local Modules
-from cofactr.kb.entity.types import PricePoint
 from cofactr.schema.logistics_v2.seller import Seller
+from cofactr.schema.types import PricePoint
 
 
 @dataclass
