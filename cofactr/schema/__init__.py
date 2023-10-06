@@ -24,6 +24,7 @@ from cofactr.schema.flagship_cache_v2 import FlagshipCacheV2Part
 from cofactr.schema.flagship_cache_v3 import FlagshipCacheV3Part
 from cofactr.schema.flagship_cache_v4 import FlagshipCacheV4Part
 from cofactr.schema.flagship_cache_v5 import FlagshipCacheV5Part
+from cofactr.schema.flagship_cache_v6 import FlagshipCacheV6Part
 from cofactr.schema.logistics import LogisticsOffer, LogisticsPart
 from cofactr.schema.logistics_v2 import (
     LogisticsV2Part,
@@ -42,6 +43,8 @@ from cofactr.schema.price_solver_v6 import PriceSolverV6Part
 from cofactr.schema.price_solver_v7 import PriceSolverV7Part
 from cofactr.schema.price_solver_v8 import PriceSolverV8Part
 from cofactr.schema.price_solver_v9 import PriceSolverV9Part
+from cofactr.schema.price_solver_v10 import PriceSolverV10Part
+from cofactr.schema.price_solver_v11 import PriceSolverV11Part
 
 
 class ProductSchemaName(str, Enum):
@@ -62,6 +65,7 @@ class ProductSchemaName(str, Enum):
     FLAGSHIP_CACHE_V3 = "flagship-cache-v3"
     FLAGSHIP_CACHE_V4 = "flagship-cache-v4"
     FLAGSHIP_CACHE_V5 = "flagship-cache-v5"
+    FLAGSHIP_CACHE_V6 = "flagship-cache-v6"
     LOGISTICS = "logistics"
     LOGISTICS_V2 = "logistics-v2"
     LOGISTICS_V3 = "logistics-v3"
@@ -76,6 +80,8 @@ class ProductSchemaName(str, Enum):
     PRICE_SOLVER_V7 = "price-solver-v7"
     PRICE_SOLVER_V8 = "price-solver-v8"
     PRICE_SOLVER_V9 = "price-solver-v9"
+    PRICE_SOLVER_V10 = "price-solver-v10"
+    PRICE_SOLVER_V11 = "price-solver-v11"
 
 
 schema_to_product: Dict[ProductSchemaName, Callable] = {
@@ -93,6 +99,7 @@ schema_to_product: Dict[ProductSchemaName, Callable] = {
     ProductSchemaName.FLAGSHIP_CACHE_V3: FlagshipCacheV3Part,
     ProductSchemaName.FLAGSHIP_CACHE_V4: FlagshipCacheV4Part,
     ProductSchemaName.FLAGSHIP_CACHE_V5: FlagshipCacheV5Part,
+    ProductSchemaName.FLAGSHIP_CACHE_V6: FlagshipCacheV6Part,
     ProductSchemaName.LOGISTICS: LogisticsPart,
     ProductSchemaName.LOGISTICS_V2: LogisticsV2Part,
     ProductSchemaName.LOGISTICS_V3: LogisticsV3Part,
@@ -107,6 +114,8 @@ schema_to_product: Dict[ProductSchemaName, Callable] = {
     ProductSchemaName.PRICE_SOLVER_V7: PriceSolverV7Part,
     ProductSchemaName.PRICE_SOLVER_V8: PriceSolverV8Part,
     ProductSchemaName.PRICE_SOLVER_V9: PriceSolverV9Part,
+    ProductSchemaName.PRICE_SOLVER_V10: PriceSolverV10Part,
+    ProductSchemaName.PRICE_SOLVER_V11: PriceSolverV11Part,
 }
 
 
