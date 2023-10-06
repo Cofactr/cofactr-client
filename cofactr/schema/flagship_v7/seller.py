@@ -6,6 +6,7 @@ from typing import Dict
 # Local Modules
 from cofactr.schema.flagship_v6.seller import Seller as FlagshipV6Seller
 
+# Shipping method label -> lead time.
 PlatformShippingMethods = Dict[str, int]
 
 @dataclass
