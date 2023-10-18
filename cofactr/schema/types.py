@@ -1,6 +1,6 @@
 """Types for use in schema definitions."""
 # Standard Modules
-from typing import Any, List, Literal, Optional, TypedDict
+from typing import Any, Dict, List, Literal, Optional, TypedDict
 from typing_extensions import NotRequired
 
 
@@ -166,8 +166,8 @@ class OrderInV0(TypedDict):
     seller_id: str
     # Purchase order number.
     po_number: str
-    buyer_contact: ContactV0
-    shipping_contact: ContactV0
+    buyer_contact: NotRequired[ContactV0]
+    shipping_contact: NotRequired[ContactV0]
     # Billing account ID (Example: Digi-Key Net Terms Billing account number). If it is `None`
     # or not provided, the fall back will be the default set up in integration-wide configuration.
     billing_account_id: NotRequired[Optional[str]]
@@ -177,6 +177,9 @@ class OrderInV0(TypedDict):
     # Shipping methods in order of preference (Example: `["FedEx Ground"]`).
     shipping_methods: List[str]
     order_lines: List[OrderLineInV0]
+
+    preset_id: NotRequired[str]
+    preset_args: NotRequired[Dict]
 
 
 class PricePoint(TypedDict):
