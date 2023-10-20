@@ -27,13 +27,42 @@ class Completion(TypedDict):
     id: str
     label: str
 
-
+AecqStatusType = Literal[
+    "AEC-Q100",
+    "AEC-Q101",
+    "AEC-Q102",
+    "AEC-Q103",
+    "AEC-Q104",
+    "AEC-Q200",
+    "AEC-Q001",
+    "AEC-Q002",
+    "AEC-Q003",
+    "AEC-Q004",
+    "AEC-Q005",
+    "AEC-Q006",
+    "AEC-Q Unknown",
+]
 LifecycleStatusType = Literal[
     "New",
     "NRFND",
     "Production",
     "EOL",
     "Obsolete",
+]
+ReachStatusType = Literal[
+    "REACH Affected",
+    "REACH Compliant",
+    "REACH Non-Compliant",
+    "REACH Unaffected",
+    "REACH Unknown",
+]
+RohsStatusType = Literal[
+    "RoHS Compliant by Exemption",
+    "RoHS Compliant",
+    "RoHS Non-Compliant",
+    "RoHS Unknown",
+    "RoHS3 Compliant by Exemption",
+    "RoHS3 Compliant",
 ]
 TerminationType = Literal[
     "other",
@@ -90,11 +119,14 @@ class PartialPartInV0(TypedDict):
     custom_id: NotRequired[Optional[str]]
     mfr: NotRequired[Optional[ManufacturerInV0]]
 
+    aecq_status: NotRequired[Optional[AecqStatusType]]
     classification: NotRequired[Optional[ClassificationInV0]]
     description: NotRequired[Optional[str]]
     lifecycle_status: NotRequired[Optional[LifecycleStatusType]]
     msl: NotRequired[Optional[str]]
     package: NotRequired[Optional[str]]
+    reach_status: NotRequired[Optional[ReachStatusType]]
+    rohs_status: NotRequired[Optional[RohsStatusType]]
     terminations: NotRequired[Optional[int]]
     termination_type: NotRequired[Optional[TerminationType]]
 

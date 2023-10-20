@@ -348,6 +348,15 @@ def test_get_canonical_product_ids(ids, expected_id_to_canonical_id):
             PartialPartInV0(custom_id="test value", lifecycle_status="Production"),
             "sdk test",
         ),
+        (
+            "COZSJWDV39RW",
+            PartialPartInV0(
+                aecq_status="AEC-Q Unknown",
+                reach_status="REACH Compliant",
+                rohs_status="RoHS Compliant",
+            ),
+            "sdk test",
+        ),
     ],
 )
 def test_update_product(product_id, data, owner_id):
