@@ -11,7 +11,12 @@ from cofactr.schema.flagship import (
     FlagshipPart,
     FlagshipSeller,
 )
-from cofactr.schema.flagship_v2 import FlagshipV2Offer, FlagshipV2Part, FlagshipV2Seller
+from cofactr.schema.flagship_v2 import (
+    FlagshipV2Offer,
+    FlagshipV2OrderStatus,
+    FlagshipV2Part,
+    FlagshipV2Seller,
+)
 from cofactr.schema.flagship_v3 import FlagshipV3Offer, FlagshipV3Part, FlagshipV3Seller
 from cofactr.schema.flagship_v4 import FlagshipV4Part, FlagshipV4Offer, FlagshipV4Seller
 from cofactr.schema.flagship_v5 import FlagshipV5Offer, FlagshipV5Part, FlagshipV5Seller
@@ -220,8 +225,10 @@ class OrderSchemaName(str, Enum):
     """Order schema name."""
 
     FLAGSHIP = "flagship"
+    FLAGSHIP_V2 = "flagship-v2"
 
 
 schema_to_order: Dict[OrderSchemaName, Callable] = {
     OrderSchemaName.FLAGSHIP: FlagshipOrderStatus,
+    OrderSchemaName.FLAGSHIP_V2: FlagshipV2OrderStatus,
 }

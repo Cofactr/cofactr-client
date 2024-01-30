@@ -13,6 +13,7 @@ import pytest
 from cofactr.graph import GraphAPI, SearchStrategy
 from cofactr.schema import (
     OfferSchemaName,
+    OrderSchemaName,
     ProductSchemaName,
     SupplierSchemaName,
 )
@@ -439,7 +440,7 @@ def test_get_orders_by_ids(ids, expected_order_ids):
         api_key=API_KEY,
     )
 
-    id_to_order = graph.get_orders_by_ids(ids=ids)
+    id_to_order = graph.get_orders_by_ids(ids=ids, schema=OrderSchemaName.FLAGSHIP_V2)
 
     assert expected_order_ids == list(id_to_order.keys())
 
